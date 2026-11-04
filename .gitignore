@@ -1,0 +1,6 @@
+node_modules
+*.vsix
+vscode-extension/media/elk.bundled.js
+vscode-extension/media/viewer.html
+__pycache__/
+.DS_Store

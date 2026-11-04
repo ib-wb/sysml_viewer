@@ -1,0 +1,33 @@
+.dg .nb{fill:var(--n-bg);stroke:var(--edge);stroke-width:1.2}
+.dg .k-part .nb{fill:var(--n-part)}.dg .k-item .nb{fill:var(--n-item)}.dg .k-port .nb{fill:var(--n-port)}.dg .k-attribute .nb,.dg .k-enum .nb{fill:var(--n-attr)}
+.dg .k-requirement .nb{fill:var(--n-req)}.dg .k-state .nb{fill:var(--n-state)}.dg .k-action .nb{fill:var(--n-action)}.dg .k-usage .nb{fill:var(--n-usage)}
+.dg .k-interface .nb,.dg .k-connection .nb{fill:var(--n-port)}
+.dg .nb.frame{fill-opacity:.4}
+.dg .collapsed .nb{stroke-dasharray:4 3}
+.dg .st{font-size:10.5px;font-style:italic;fill:var(--muted)}
+.dg .nm{font-size:12.5px;font-weight:600;fill:var(--ink)}.dg .it{font-style:italic}
+.dg .sep{stroke:var(--edge);stroke-width:.8;opacity:.45}
+.dg .ct{font-size:10.5px;font-style:italic;fill:var(--muted)}.dg .dc{fill:var(--ink)}
+.dg .ln{font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;fill:var(--ink)}
+.dg .pt{fill:var(--canvas);stroke:var(--port);stroke-width:1.4}.dg .pa{fill:var(--port)}
+.dg .pl{font-size:10.5px;fill:var(--ink)}
+.dg .ps-fill{fill:var(--ink)}.dg .ps-ring{fill:none;stroke:var(--ink);stroke-width:1.4}
+.dg .e{fill:none;stroke:var(--edge);stroke-width:1.2}
+.dg .e-flow{stroke:var(--flow);stroke-width:1.5}
+.dg .e-typed,.dg .e-satisfy,.dg .e-bind,.dg .e-defby,.dg .e-alloc{stroke-dasharray:5 4}
+.dg .e-iface{stroke-width:2.4}
+.dg .el{font-size:10.5px;fill:var(--muted);paint-order:stroke;stroke:var(--canvas);stroke-width:3px;stroke-linejoin:round}
+.dg .el-flow{fill:var(--flow)}
+.dg .mk-hollow{fill:var(--canvas);stroke:var(--edge);stroke-width:1.2}
+.dg .mk-solid{fill:var(--edge)}
+.dg .mk-line{fill:none;stroke:var(--edge);stroke-width:1.2}
+.dg .mk-flow{fill:var(--flow)}
+.dg [data-eid]{cursor:pointer}
+.dg .sel .nb,.dg .sel .pt{stroke:var(--accent);stroke-width:2.6}
+.dg .amb .nb{stroke:var(--warn);stroke-width:2}
+.dg .ambm circle{fill:var(--warn)}.dg .ambm text{fill:var(--canvas);font-size:10px;font-weight:700}
+.dg .k-file .nb{fill:var(--canvas);fill-opacity:.55;stroke-dasharray:6 3}
+.dg .k-file > .st{font-style:normal;letter-spacing:.06em}
+.dg .center .nb{stroke:var(--accent);stroke-width:2.2}
+.dg .e-inner{stroke-dasharray:2 4;stroke-width:1.4}
+.dg .k-state.nd .nb,.dg .k-action .nb{}

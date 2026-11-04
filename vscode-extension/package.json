@@ -1,0 +1,107 @@
+{
+  "name": "sysml-v2-viewer",
+  "displayName": "SysML v2 Viewer",
+  "description": "Navigator und Diagramme für SysML-v2-Textmodelle: Anforderungsabdeckung, Rückverfolgung, Auswirkungsanalyse, Struktur-, Verbindungs-, Zustands- und Aktionsdiagramme.",
+  "version": "0.1.0",
+  "publisher": "ib-wb",
+  "author": {
+    "name": "Wolfgang Becker"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "SysML",
+    "SysML v2",
+    "MBSE",
+    "Traceability",
+    "Requirements"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onWebviewPanel:sysmlViewer"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "sysmlViewer.open",
+        "title": "Viewer öffnen",
+        "category": "SysML",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "sysmlViewer.reveal",
+        "title": "Element im Navigator zeigen",
+        "category": "SysML",
+        "icon": "$(target)"
+      },
+      {
+        "command": "sysmlViewer.refresh",
+        "title": "Modelldateien neu einlesen",
+        "category": "SysML"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "sysmlViewer.open",
+          "when": "resourceExtname == .sysml || resourceExtname == .kerml",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "sysmlViewer.reveal",
+          "when": "resourceExtname == .sysml || resourceExtname == .kerml",
+          "group": "navigation@90"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "sysmlViewer.open",
+          "when": "explorerResourceIsFolder || resourceExtname == .sysml",
+          "group": "navigation@90"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "sysmlViewer.reveal",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n",
+        "when": "editorTextFocus && (resourceExtname == .sysml || resourceExtname == .kerml)"
+      }
+    ],
+    "configuration": {
+      "title": "SysML v2 Viewer",
+      "properties": {
+        "sysmlViewer.followNavigator": {
+          "type": "boolean",
+          "default": false,
+          "description": "Wenn aktiv, springt der Editor automatisch an die passende Stelle, sobald sich der Fokus im Navigator ändert. Sonst nur bei Klick auf einen Zeilen-Link."
+        },
+        "sysmlViewer.include": {
+          "type": "string",
+          "default": "**/*.{sysml,kerml}",
+          "description": "Glob-Muster für die Modelldateien, die der Viewer einliest."
+        },
+        "sysmlViewer.exclude": {
+          "type": "string",
+          "default": "**/{node_modules,.git,build,dist,out}/**",
+          "description": "Glob-Muster für Ordner, die übersprungen werden (z. B. Standardbibliothek)."
+        },
+        "sysmlViewer.liveUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ansicht schon beim Tippen aktualisieren (ungespeicherte Änderungen), nicht erst beim Speichern."
+        }
+      }
+    }
+  }
+}
