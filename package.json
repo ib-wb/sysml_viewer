@@ -6,7 +6,7 @@
   "author": "Wolfgang Becker (ib-wb.de)",
   "scripts": {
     "build": "python3 tools/build.py",
-    "test": "node tests/parser.test.js && node tests/extension.test.js",
+    "test": "python3 tools/build.py && node tests/parser.test.js && node tests/extension.test.js",
     "package": "npm run build && cd vscode-extension && vsce package --allow-missing-repository --no-dependencies --out ../dist/"
   },
   "devDependencies": {
