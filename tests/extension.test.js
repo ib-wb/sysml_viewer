@@ -16,6 +16,8 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   assert.ok(!/cdn\.jsdelivr/.test(html), 'CDN-Verweis übrig');
 
   M.send({ type: 'ready' }); await wait(100);
+  const conf = M.posted.find(m => m.type === 'config');
+  assert.strictEqual(conf && conf.lang, 'en', 'VS-Code-Sprache nicht an den Viewer übergeben');
   const files = M.posted.find(m => m.type === 'files');
   assert.ok(files && files.files.length >= 5, 'Modelldateien nicht gesendet');
 

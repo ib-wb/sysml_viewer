@@ -20,6 +20,10 @@ Navigator und Diagramme für SysML-v2-Textmodelle direkt in VS Code. Der Viewer 
 | Vom Viewer in den Quelltext | Zeilen-Link auf der Karte, Hinweis oder Kante anklicken |
 | Editor automatisch mitlaufen lassen | Einstellung `sysmlViewer.followNavigator` |
 
+## Sprache
+
+Der Viewer übernimmt beim ersten Öffnen die Sprache von VS Code (Deutsch oder Englisch; bei anderen Sprachen Englisch). Umschalten geht jederzeit oben rechts im Viewer; die Wahl wird gemerkt. Befehle und Einstellungen erscheinen in der Sprache von VS Code.
+
 ## Einstellungen
 
 | Einstellung | Standard | Wirkung |

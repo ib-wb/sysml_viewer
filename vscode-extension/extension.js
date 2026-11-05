@@ -12,6 +12,18 @@ let timer = null;
 
 const cfg = () => vscode.workspace.getConfiguration('sysmlViewer');
 
+// Meldungen der Extension selbst; die Webview-Texte stehen in src/lang/*.json
+const MSG = {
+  de: { notFound: 'SysML Viewer: Datei „{0}“ nicht gefunden.', openFirst: 'SysML Viewer: Bitte eine .sysml-Datei im Editor öffnen.' },
+  en: { notFound: 'SysML Viewer: file “{0}” not found.', openFirst: 'SysML Viewer: please open a .sysml file in the editor.' }
+};
+function msg(key, ...a) {
+  const lang = ((vscode.env && vscode.env.language) || 'en').slice(0, 2);
+  const s = (MSG[lang] || MSG.en)[key];
+  return s.replace(/\{(\d)\}/g, (_, i) => a[i]);
+}
+function configMsg() { return { type: 'config', follow: cfg().get('followNavigator'), lang: vscode.env && vscode.env.language }; }
+
 function post(msg) {
   if (!panel) return;
   if (ready) panel.webview.postMessage(msg); else pending.push(msg);
@@ -66,17 +78,17 @@ function htmlFor(webview, context) {
   return html;
 }
 
-async function gotoInEditor(msg) {
-  let uri = uriByName.get(msg.file);
-  if (!uri) { const hit = await vscode.workspace.findFiles('**/' + msg.file, null, 1); uri = hit[0]; }
-  if (!uri) { vscode.window.showWarningMessage(`SysML Viewer: Datei „${msg.file}“ nicht gefunden.`); return; }
+async function gotoInEditor(m) {
+  let uri = uriByName.get(m.file);
+  if (!uri) { const hit = await vscode.workspace.findFiles('**/' + m.file, null, 1); uri = hit[0]; }
+  if (!uri) { vscode.window.showWarningMessage(msg('notFound', m.file)); return; }
   const doc = await vscode.workspace.openTextDocument(uri);
-  const line = Math.max(0, Math.min((msg.line || 1) - 1, doc.lineCount - 1));
+  const line = Math.max(0, Math.min((m.line || 1) - 1, doc.lineCount - 1));
   const range = doc.lineAt(line).range;
   // Editor links vom Viewer öffnen; ist schon einer mit dieser Datei sichtbar, diesen nehmen
   const visible = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === uri.toString());
   const column = visible ? visible.viewColumn : (panel && panel.viewColumn === vscode.ViewColumn.One ? vscode.ViewColumn.Two : vscode.ViewColumn.One);
-  const ed = await vscode.window.showTextDocument(doc, { viewColumn: column, preserveFocus: !!msg.preserveFocus, selection: range });
+  const ed = await vscode.window.showTextDocument(doc, { viewColumn: column, preserveFocus: !!m.preserveFocus, selection: range });
   ed.revealRange(range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
 }
 
@@ -88,7 +100,7 @@ function setupPanel(p, context) {
   p.webview.onDidReceiveMessage(msg => {
     if (msg.type === 'ready') {
       ready = true;
-      p.webview.postMessage({ type: 'config', follow: cfg().get('followNavigator') });
+      p.webview.postMessage(configMsg());
       sendFiles().then(() => { for (const m of pending) p.webview.postMessage(m); pending = []; });
     }
     if (msg.type === 'goto') gotoInEditor(msg);
@@ -112,7 +124,7 @@ function activate(context) {
     vscode.commands.registerCommand('sysmlViewer.refresh', () => { if (panel) sendFiles(); else openViewer(context); }),
     vscode.commands.registerCommand('sysmlViewer.reveal', () => {
       const ed = vscode.window.activeTextEditor;
-      if (!ed || !MODEL_EXT.test(ed.document.fileName)) { vscode.window.showInformationMessage('SysML Viewer: Bitte eine .sysml-Datei im Editor öffnen.'); return; }
+      if (!ed || !MODEL_EXT.test(ed.document.fileName)) { vscode.window.showInformationMessage(msg('openFirst')); return; }
       const name = vscode.workspace.asRelativePath(ed.document.uri, (vscode.workspace.workspaceFolders || []).length > 1);
       openViewer(context);
       post({ type: 'reveal', file: name, line: ed.selection.active.line + 1 });
@@ -128,7 +140,7 @@ function activate(context) {
   }));
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
     if (!panel) return;
-    if (e.affectsConfiguration('sysmlViewer.followNavigator')) post({ type: 'config', follow: cfg().get('followNavigator') });
+    if (e.affectsConfiguration('sysmlViewer.followNavigator')) post(configMsg());
     if (e.affectsConfiguration('sysmlViewer.include') || e.affectsConfiguration('sysmlViewer.exclude')) scheduleSend(100);
   }));
   // Viewer nach Neustart von VS Code wiederherstellen

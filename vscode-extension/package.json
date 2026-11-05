@@ -1,8 +1,8 @@
 {
   "name": "sysml-v2-viewer",
   "displayName": "SysML v2 Viewer",
-  "description": "Navigator und Diagramme für SysML-v2-Textmodelle: Anforderungsabdeckung, Rückverfolgung, Auswirkungsanalyse, Struktur-, Verbindungs-, Zustands- und Aktionsdiagramme.",
-  "version": "0.2.0",
+  "description": "%desc%",
+  "version": "0.3.0",
   "publisher": "ib-wb",
   "author": {
     "name": "Wolfgang Becker"
@@ -31,19 +31,19 @@
     "commands": [
       {
         "command": "sysmlViewer.open",
-        "title": "Viewer öffnen",
+        "title": "%cmd.open%",
         "category": "SysML",
         "icon": "$(type-hierarchy)"
       },
       {
         "command": "sysmlViewer.reveal",
-        "title": "Element im Navigator zeigen",
+        "title": "%cmd.reveal%",
         "category": "SysML",
         "icon": "$(target)"
       },
       {
         "command": "sysmlViewer.refresh",
-        "title": "Modelldateien neu einlesen",
+        "title": "%cmd.refresh%",
         "category": "SysML"
       }
     ],
@@ -84,22 +84,22 @@
         "sysmlViewer.followNavigator": {
           "type": "boolean",
           "default": false,
-          "description": "Wenn aktiv, springt der Editor automatisch an die passende Stelle, sobald sich der Fokus im Navigator ändert. Sonst nur bei Klick auf einen Zeilen-Link."
+          "description": "%cfg.followNavigator%"
         },
         "sysmlViewer.include": {
           "type": "string",
           "default": "**/*.{sysml,kerml}",
-          "description": "Glob-Muster für die Modelldateien, die der Viewer einliest."
+          "description": "%cfg.include%"
         },
         "sysmlViewer.exclude": {
           "type": "string",
           "default": "**/{node_modules,.git,build,dist,out}/**",
-          "description": "Glob-Muster für Ordner, die übersprungen werden (z. B. Standardbibliothek)."
+          "description": "%cfg.exclude%"
         },
         "sysmlViewer.liveUpdate": {
           "type": "boolean",
           "default": true,
-          "description": "Ansicht schon beim Tippen aktualisieren (ungespeicherte Änderungen), nicht erst beim Speichern."
+          "description": "%cfg.liveUpdate%"
         }
       }
     }

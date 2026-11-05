@@ -6,6 +6,7 @@ class Uri { constructor(p) { this.fsPath = p; } toString() { return 'file://' + 
 function walk(d) { let r = []; for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) r = r.concat(walk(p)); else r.push(p); } return r; }
 const editors = [];
 const vscode = {
+  env: { language: 'en' },
   Uri, ViewColumn: { One: 1, Two: 2, Beside: -2 }, TextEditorRevealType: { InCenterIfOutsideViewport: 2 },
   workspace: {
     workspaceFolders: [{ name: 'Indoorroboter', uri: Uri.file(WS) }], name: 'Indoorroboter', textDocuments: [],

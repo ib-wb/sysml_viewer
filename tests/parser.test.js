@@ -1,6 +1,7 @@
 // Prüft Parser, Namensauflösung und Traceability am Beispielprojekt
 const assert = require('assert'); const fs = require('fs'); const path = require('path');
 const C = require('../src/core.js');
+C.setDicts({ de: require('../src/lang/de.json') }); C.setLang('de');
 const dir = path.resolve(__dirname, '../beispiel/indoorroboter');
 const files = [];
 (function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else if (/\.(sysml|kerml)$/.test(f)) files.push({ name: path.relative(dir, p).split(path.sep).join('/'), text: fs.readFileSync(p, 'utf8') }); } })(dir);

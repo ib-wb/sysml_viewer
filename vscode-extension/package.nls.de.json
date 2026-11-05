@@ -1,0 +1,10 @@
+{
+  "desc": "Navigator und Diagramme für SysML-v2-Textmodelle: Anforderungsabdeckung, Rückverfolgung, Auswirkungsanalyse, Struktur-, Verbindungs-, Zustands- und Aktionsdiagramme.",
+  "cmd.open": "Viewer öffnen",
+  "cmd.reveal": "Element im Navigator zeigen",
+  "cmd.refresh": "Modelldateien neu einlesen",
+  "cfg.followNavigator": "Wenn aktiv, springt der Editor automatisch an die passende Stelle, sobald sich der Fokus im Navigator ändert. Sonst nur bei Klick auf einen Zeilen-Link.",
+  "cfg.include": "Glob-Muster für die Modelldateien, die der Viewer einliest.",
+  "cfg.exclude": "Glob-Muster für Ordner, die übersprungen werden (z. B. Standardbibliothek).",
+  "cfg.liveUpdate": "Ansicht schon beim Tippen aktualisieren (ungespeicherte Änderungen), nicht erst beim Speichern."
+}

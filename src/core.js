@@ -1,4 +1,21 @@
 'use strict';
+/* ================= Sprache (i18n) =================
+   Texte stehen in src/lang/<code>.json. L(key, {platzhalter}) liefert den Text der aktiven Sprache,
+   fällt auf Deutsch und zuletzt auf den Schlüssel zurück. Ln(key, n) wählt die Pluralform
+   (key.one, key.other, … nach Intl.PluralRules). Lj(liste) verbindet „a, b und c“ sprachgerecht. */
+const BASE_LANG = 'de';
+let LANG = BASE_LANG, DICTS = {};
+function setDicts(d) { DICTS = d || {}; }
+function setLang(code) { LANG = DICTS[code] ? code : BASE_LANG; return LANG; }
+function lookup(key) { const a = DICTS[LANG], b = DICTS[BASE_LANG]; return a && a[key] !== undefined ? a[key] : b && b[key] !== undefined ? b[key] : undefined; }
+function fill(s, p) { return p ? String(s).replace(/\{(\w+)\}/g, (m, k) => p[k] !== undefined && p[k] !== null ? p[k] : m) : String(s); }
+function L(key, p) { const s = lookup(key); return fill(s === undefined ? key : s, p); }
+function Ln(key, n, p) {
+  let cat = 'other'; try { cat = new Intl.PluralRules(LANG).select(n); } catch (e) {}
+  const s = lookup(key + '.' + cat) ?? lookup(key + '.other') ?? key;
+  return fill(s, Object.assign({ n }, p || {}));
+}
+function Lj(list) { try { return new Intl.ListFormat(LANG, { style: 'long', type: 'conjunction' }).format(list); } catch (e) { return list.join(', '); } }
 /* ================= Tokenizer ================= */
 const SYMS = [':>>', '::>', ':>', '::', ':=', '==', '!=', '<=', '>=', '->', '..', '=>', '**'];
 function countNL(s, a, b) { let c = 0; for (let k = a; k < b; k++) if (s.charCodeAt(k) === 10) c++; return c; }
@@ -112,8 +129,8 @@ function parse(src) {
   function endSimple() { if (isSym(';')) { i++; return; } if (isSym('{')) { skipStmt(); } }
   function endDecl(el) {
     if (isSym(';')) { i++; return; }
-    if (isSym('{')) { i++; body(el); if (isSym('}')) i++; else warn(el.line, 'Fehlende schließende Klammer } für „' + (el.name || el.kind) + '“'); return; }
-    warn(pk().line, 'Unerwartet: „' + (pk().v || 'Dateiende') + '“ nach ' + (el.name || el.kind));
+    if (isSym('{')) { i++; body(el); if (isSym('}')) i++; else warn(el.line, L('parse.missingBrace', { name: el.name || el.kind })); return; }
+    warn(pk().line, L('parse.unexpected', { tok: pk().v || L('parse.eof'), name: el.name || el.kind }));
     skipStmt();
   }
   function rel(p, type, src, tgt, line, extra) { p.rels.push(Object.assign({ type, src, tgt, line, owner: p }, extra || {})); }
@@ -167,7 +184,7 @@ function parse(src) {
     if (!kind) {
       const t = pk();
       if (t.t === 'id' || isSym(':>>') || isSym(':>') || isSym(':') || role || mods.length) kind = role || 'feature';
-      else { warn(line, 'Nicht erkannt: „' + t.v + '“ – Anweisung übersprungen'); skipStmt(); return null; }
+      else { warn(line, L('parse.unknown', { tok: t.v })); skipStmt(); return null; }
     }
     const el = mk(kind, isDef, p, line, mods); el.role = role;
     declTail(el);
@@ -188,7 +205,7 @@ function parse(src) {
     if (isKw('to')) { i++; tgt = chain(); }
     endSimple();
     if (src && tgt) rel(p, 'flow', src, tgt, line, { label: type ? lastSeg(type) : (name || '') });
-    else warn(line, 'flow ohne Quelle/Ziel');
+    else warn(line, L('parse.flowNoEnds'));
   }
   function statement(p) {
     if (isSym(';')) { i++; return; }
@@ -239,7 +256,7 @@ function parse(src) {
         i++; let name = null; if (isName()) { name = pk().v; i++; }
         let src = p._last; if (isKw('first')) { i++; src = chain(); }
         const r = transTail(); endSimple();
-        if (src && r.tgt) rel(p, 'transition', src, r.tgt, line, Object.assign(r, { name })); else warn(line, 'transition ohne Quelle/Ziel');
+        if (src && r.tgt) rel(p, 'transition', src, r.tgt, line, Object.assign(r, { name })); else warn(line, L('parse.transitionNoEnds'));
         return;
       }
       case 'accept':
@@ -300,7 +317,7 @@ function parse(src) {
     declaration(p);
   }
   body(root);
-  while (!eof()) { if (isSym('}')) { warn(pk().line, 'Überzählige schließende Klammer }'); i++; } body(root); }
+  while (!eof()) { if (isSym('}')) { warn(pk().line, L('parse.extraBrace')); i++; } body(root); }
   return { root, warns };
 }
 function cleanDoc(t) { return t.split('\n').map(l => l.replace(/^\s*\*\s?/, '').trim()).join(' ').replace(/\s+/g, ' ').trim(); }
@@ -493,7 +510,7 @@ function viewStruct(scope, opt) {
     const frames = new Map(); groupRoots = [];
     for (const n of roots) {
       const f = n.el.file; if (!f) { groupRoots.push(n); continue; }
-      if (!frames.has(f)) { const fr = node({ stereo: 'Datei', name: f, cls: 'k-file' }); frames.set(f, fr); groupRoots.push(fr); }
+      if (!frames.has(f)) { const fr = node({ stereo: L('struct.fileStereo'), name: f, cls: 'k-file' }); frames.set(f, fr); groupRoots.push(fr); }
       frames.get(f).children.push(n);
     }
   }
@@ -511,7 +528,7 @@ function viewStruct(scope, opt) {
     }
     if (!el.isDef) for (const t of el.types) { const d = resolveDef(t, el); if (d && map.has(d)) edges.push({ id: 'e' + (++k), src: map.get(d).id, tgt: n.id, cls: 'defby', ms: 'tri', label: 'defined by' }); }
   }
-  return { dir: 'DOWN', roots: groupRoots, edges, legend: ['comp', 'spec', 'typed', 'defby'], empty: roots.length ? null : 'In diesem Bereich gibt es keine Definitionen (part def, item def, port def …).' };
+  return { dir: 'DOWN', roots: groupRoots, edges, legend: ['comp', 'spec', 'typed', 'defby'], empty: roots.length ? null : L('struct.empty') };
 }
 
 const defsFirst = l => l.filter(e => e.isDef).concat(l.filter(e => !e.isDef));
@@ -563,7 +580,7 @@ function viewIBD(ctx, depth) {
     }
     n.children.forEach(sides);
   })(root);
-  return { dir: 'RIGHT', roots: [root], edges, legend: ['conn', 'iface', 'flow', 'port'], note: missing.length ? missing.length + ' Verbindung(en) mit nicht auflösbaren Enden ausgelassen' : null };
+  return { dir: 'RIGHT', roots: [root], edges, legend: ['conn', 'iface', 'flow', 'port'], note: missing.length ? Ln('ibd.missing', missing.length) : null };
 }
 
 function stateCandidates() { return defsFirst(IDX.all.filter(e => e.kind === 'state' && e.name && !e.stateAct && (e.isDef || !e.parent || e.parent.kind !== 'state') && (features(e).some(c => c.kind === 'state') || e.isDef))); }
@@ -679,7 +696,7 @@ function viewReqs(scope) {
     }
     edges.push({ id: 'e' + (++k), src: map.get(req).id, tgt: sats.get(label).id, cls: 'satisfy', ms: 'open', label: '«satisfy»', line: r.line, file: r.file || (r.owner && r.owner.file) });
   }
-  return { dir: 'DOWN', roots, edges, legend: ['satisfy', 'contain', 'defby'], empty: map.size ? null : 'Keine requirement-Elemente in diesem Bereich.' };
+  return { dir: 'DOWN', roots, edges, legend: ['satisfy', 'contain', 'defby'], empty: map.size ? null : L('reqs.empty') };
 }
 
 
@@ -758,7 +775,7 @@ function viewDetail(el) {
   if (ibd) {
     const fr = ibd.roots[0]; fr.stereo = 'innere Struktur'; fr.name = label(el); fr.inner = true; roots.push(fr);
     for (const e of ibd.edges) edges.push(e);
-    E({ src: center.id, tgt: fr.id, cls: 'inner', me: 'open', label: 'besteht aus' });
+    E({ src: center.id, tgt: fr.id, cls: 'inner', me: 'open', label: L('detail.consistsOf') });
   }
   return { dir: 'DOWN', roots, edges, usedIn, legend: ['comp', 'spec', 'defby', 'typed', 'satisfy', 'conn', 'iface', 'flow', 'port'], note: ibd && ibd.note };
 }
@@ -871,13 +888,7 @@ function renderSVG(model, g) {
 
 
 /* ================= Rückverfolgung: Trace-Graph ================= */
-const STAGES = [
-  { id: 'req', label: 'Anforderungen', q: 'Was wird gefordert?' },
-  { id: 'struct', label: 'Struktur', q: 'Welche Komponenten setzen es um?' },
-  { id: 'iface', label: 'Schnittstellen', q: 'Über welche Ports und Verbindungen?' },
-  { id: 'behav', label: 'Verhalten', q: 'Welche Abläufe und Zustände?' },
-  { id: 'test', label: 'Nachweis', q: 'Womit wird es geprüft?' },
-];
+const STAGES = ['req', 'struct', 'iface', 'behav', 'test'].map(id => ({ id, get label() { return L('stage.' + id); }, get q() { return L('stage.' + id + '.q'); } }));
 function stageOf(el) {
   if (!el || !el.kind) return null;
   const k = el.kind;
@@ -970,91 +981,86 @@ function buildTrace() {
 }
 const trOut = (x, t) => (TR.out.get(x) || []).filter(e => !t || e.type === t).map(e => e.b);
 const trIn = (x, t) => (TR.inn.get(x) || []).filter(e => !t || e.type === t).map(e => e.a);
-const REL = {
-  satisfy: ['erfüllt', 'erfüllt durch'], verify: ['verifiziert', 'verifiziert durch'],
-  derive: ['abgeleitet zu', 'abgeleitet aus'], refine: ['verfeinert', 'verfeinert durch'], depend: ['hängt ab von', 'Abhängigkeit von'],
-  allocate: ['alloziert auf', 'alloziert von'], typed: ['Definition', 'Usage'], spec: ['spezialisiert', 'spezialisiert durch'],
-  owns: ['enthält', 'Teil von'], perform: ['führt aus', 'ausgeführt von'], subject: ['prüft Gegenstand', 'ist Gegenstand von'],
-  connect: ['verbunden mit', 'verbunden mit'], flow: ['liefert an', 'erhält von'], bind: ['gebunden an', 'gebunden an'], end: ['verbindet', 'über Schnittstelle'],
-};
 const TRACE_TYPES = ['satisfy', 'verify', 'derive', 'refine', 'allocate'];
 function traceNeighbors(F) {
+  // Jede Beziehung trägt einen Schlüssel k (satisfy, verify, owns …) – die Oberfläche erkennt Lücken daran, nicht am Text.
   const res = new Map();
-  const put = (el, label, indirect, edge) => {
+  const put = (el, k, text, indirect, edge) => {
     if (!el || el === F || !stageOf(el)) return;
     let r = res.get(el); if (!r) { r = { el, labels: [], indirect: true, edges: [], trace: false }; res.set(el, r); }
-    if (!r.labels.includes(label)) r.labels.push(label);
+    if (!r.labels.some(x => x.text === text)) r.labels.push({ k, text });
     if (!indirect) r.indirect = false;
     if (edge) { r.edges.push(edge); if (TRACE_TYPES.includes(edge.type)) r.trace = true; }
   };
-  for (const e of TR.out.get(F) || []) put(e.b, REL[e.type][0] + (e.via ? ' (' + e.via + ')' : ''), false, e);
-  for (const e of TR.inn.get(F) || []) put(e.a, REL[e.type][1] + (e.via ? ' (' + e.via + ')' : ''), false, e);
+  const via = e => e.via ? ' (' + e.via + ')' : '';
+  for (const e of TR.out.get(F) || []) put(e.b, e.type, L('rel.' + e.type + '.out') + via(e), false, e);
+  for (const e of TR.inn.get(F) || []) put(e.a, e.type, L('rel.' + e.type + '.in') + via(e), false, e);
   const st = stageOf(F);
   const group = [F, ...trOut(F, 'typed'), ...trIn(F, 'typed')];
   if (st === 'req') {
-    for (const g of group) if (g !== F) { for (const s of trIn(g, 'satisfy')) put(s, 'erfüllt ' + dispName(g), true, { type: 'satisfy' }); for (const v of trIn(g, 'verify')) put(v, 'verifiziert ' + dispName(g), true, { type: 'verify' }); }
-    for (const c of trOut(F, 'owns')) { for (const s of trIn(c, 'satisfy')) put(s, 'erfüllt Unteranforderung ' + dispName(c), true, { type: 'satisfy' }); for (const v of trIn(c, 'verify')) put(v, 'prüft Unteranforderung ' + dispName(c), true, { type: 'verify' }); }
+    for (const g of group) if (g !== F) { for (const s of trIn(g, 'satisfy')) put(s, 'satisfy', L('nb.satisfies', { x: dispName(g) }), true, { type: 'satisfy' }); for (const v of trIn(g, 'verify')) put(v, 'verify', L('nb.verifies', { x: dispName(g) }), true, { type: 'verify' }); }
+    for (const c of trOut(F, 'owns')) { for (const s of trIn(c, 'satisfy')) put(s, 'satisfy', L('nb.satisfiesSub', { x: dispName(c) }), true, { type: 'satisfy' }); for (const v of trIn(c, 'verify')) put(v, 'verify', L('nb.verifiesSub', { x: dispName(c) }), true, { type: 'verify' }); }
     for (const s of trIn(F, 'satisfy')) {
-      for (const p of features(s).filter(f => f.kind === 'port')) put(p, 'Port von ' + dispName(s), true);
-      for (const b of features(s).filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed)) put(b, (b.performed === 'perform' ? 'ausgeführt' : 'gezeigt') + ' von ' + s.name, true);
-      for (const o of [...trOut(s, 'connect'), ...trIn(s, 'connect'), ...trOut(s, 'flow'), ...trIn(s, 'flow')]) if (stageOf(o) === 'struct') put(o, 'Partner von ' + s.name, true);
-      for (const v of trIn(s, 'subject')) put(v, 'testet ' + s.name, true, { type: 'subject' });
+      for (const p of features(s).filter(f => f.kind === 'port')) put(p, 'port', L('nb.portOf', { x: dispName(s) }), true);
+      for (const b of features(s).filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed)) put(b, 'perform', L(b.performed === 'perform' ? 'nb.performedBy' : 'nb.exhibitedBy', { x: s.name }), true);
+      for (const o of [...trOut(s, 'connect'), ...trIn(s, 'connect'), ...trOut(s, 'flow'), ...trIn(s, 'flow')]) if (stageOf(o) === 'struct') put(o, 'connect', L('nb.partnerOf', { x: s.name }), true);
+      for (const v of trIn(s, 'subject')) put(v, 'subject', L('nb.tests', { x: s.name }), true, { type: 'subject' });
     }
   }
   if (st === 'struct') {
     const fs = features(F);
     for (const p of fs.filter(f => f.kind === 'port')) {
-      put(p, 'hat Port', false);
+      put(p, 'port', L('nb.hasPort'), false);
       for (const e of [...(TR.out.get(p) || []), ...(TR.inn.get(p) || [])]) {
-        if (e.type === 'connect' || e.type === 'flow' || e.type === 'bind') { const o = e.a === p ? e.b : e.a; put(o, 'Gegenstelle von ' + p.name + (e.label ? ' (' + e.label + ')' : ''), true); }
-        if (e.type === 'end') put(e.a, 'Verbindung an ' + p.name, true);
+        if (e.type === 'connect' || e.type === 'flow' || e.type === 'bind') { const o = e.a === p ? e.b : e.a; put(o, 'connect', L('nb.counterpart', { p: p.name }) + (e.label ? ' (' + e.label + ')' : ''), true); }
+        if (e.type === 'end') put(e.a, 'connect', L('nb.connectionAt', { p: p.name }), true);
       }
     }
-    for (const b of fs.filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed)) put(b, b.performed === 'perform' ? 'führt aus' : 'zeigt Verhalten', false);
+    for (const b of fs.filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed)) put(b, 'perform', L(b.performed === 'perform' ? 'nb.performs' : 'nb.exhibits'), false);
     for (const g of group) {
-      for (const r of trOut(g, 'satisfy')) { put(r, g === F ? 'erfüllt' : 'erfüllt (als ' + dispName(g) + ')', g !== F, { type: 'satisfy' }); for (const v of trIn(r, 'verify')) put(v, 'prüft ' + dispName(r), true, { type: 'verify' }); }
-      for (const t of trIn(g, 'subject')) put(t, stageOf(t) === 'test' ? 'testet ' + dispName(g) : 'betrifft ' + dispName(g), g !== F, { type: 'subject' });
+      for (const r of trOut(g, 'satisfy')) { put(r, 'satisfy', g === F ? L('rel.satisfy.out') : L('nb.satisfiesAs', { x: dispName(g) }), g !== F, { type: 'satisfy' }); for (const v of trIn(r, 'verify')) put(v, 'verify', L('nb.checks', { x: dispName(r) }), true, { type: 'verify' }); }
+      for (const t of trIn(g, 'subject')) put(t, 'subject', L(stageOf(t) === 'test' ? 'nb.tests' : 'nb.concerns', { x: dispName(g) }), g !== F, { type: 'subject' });
     }
-    for (let p = F.parent; p; p = p.parent) if (stageOf(p) === 'struct') { for (const r of trOut(p, 'satisfy')) put(r, 'erfüllt über ' + p.name, true, { type: 'satisfy' }); break; }
+    for (let p = F.parent; p; p = p.parent) if (stageOf(p) === 'struct') { for (const r of trOut(p, 'satisfy')) put(r, 'satisfy', L('nb.satisfiesVia', { x: p.name }), true, { type: 'satisfy' }); break; }
   }
   if (st === 'test') {
-    for (const r of trOut(F, 'verify')) for (const s of trIn(r, 'satisfy')) put(s, 'setzt ' + dispName(r) + ' um', true, { type: 'satisfy' });
-    for (const d of trOut(F, 'subject')) for (const u of trIn(d, 'typed')) if (stageOf(u) === 'struct') put(u, 'Prüfling (' + d.name + ')', true);
+    for (const r of trOut(F, 'verify')) for (const s of trIn(r, 'satisfy')) put(s, 'satisfy', L('nb.implements', { x: dispName(r) }), true, { type: 'satisfy' });
+    for (const d of trOut(F, 'subject')) for (const u of trIn(d, 'typed')) if (stageOf(u) === 'struct') put(u, 'subject', L('nb.unitUnderTest', { x: d.name }), true);
   }
   if (st === 'iface') {
-    if (!F.isDef) { const owners = IDX.all.filter(x => stageOf(x) === 'struct' && x.children.includes(F)); for (const o of owners) put(o, 'gehört zu', false); }
-    for (const u of trIn(F, 'typed')) for (const p of trOut(u, 'end')) put(p, 'Ende von ' + dispName(u), true);
-    if (F.isDef) for (const u of trIn(F, 'typed')) if (u.kind === 'port' && u.parent && stageOf(u.parent) === 'struct') put(u.parent, 'nutzt Port ' + u.name, true);
-    for (const p of trOut(F, 'end')) { const owner = IDX.all.find(x => stageOf(x) === 'struct' && x.children.includes(p)); if (owner) put(owner, 'Port ' + p.name + ' gehört zu', true); }
+    if (!F.isDef) { const owners = IDX.all.filter(x => stageOf(x) === 'struct' && x.children.includes(F)); for (const o of owners) put(o, 'owns', L('nb.belongsTo'), false); }
+    for (const u of trIn(F, 'typed')) for (const p of trOut(u, 'end')) put(p, 'connect', L('nb.endOf', { x: dispName(u) }), true);
+    if (F.isDef) for (const u of trIn(F, 'typed')) if (u.kind === 'port' && u.parent && stageOf(u.parent) === 'struct') put(u.parent, 'port', L('nb.usesPort', { p: u.name }), true);
+    for (const p of trOut(F, 'end')) { const owner = IDX.all.find(x => stageOf(x) === 'struct' && x.children.includes(p)); if (owner) put(owner, 'owns', L('nb.portBelongsTo', { p: p.name }), true); }
   }
   return [...res.values()];
 }
 
 /* Auswirkungsanalyse: gerichtete Ausbreitung mit Begründung */
 function impactOf(F, maxDepth) {
-  const seen = new Map([[F, { depth: 0, from: null, reason: 'Ausgangspunkt der Änderung', mode: 'full' }]]);
+  const seen = new Map([[F, { depth: 0, from: null, reason: L('imp.origin'), mode: 'full' }]]);
   const q = [F];
   function nexts(x, mode) {
     const r = []; const st = stageOf(x); const n = dispName(x);
-    if (mode === 'check') { for (const v of trIn(x, 'verify')) r.push([v, 'Test wiederholen: verifiziert „' + n + '“', 'stop']); return r; }
+    if (mode === 'check') { for (const v of trIn(x, 'verify')) r.push([v, L('imp.retest', { x: n }), 'stop']); return r; }
     if (mode === 'stop') return r;
-    for (const u of trIn(x, 'typed')) r.push([u, 'ist vom Typ „' + n + '“', 'full']);
-    for (const u of trIn(x, 'spec')) r.push([u, 'spezialisiert „' + n + '“', 'full']);
-    if (!x.isDef) for (const o of trIn(x, 'owns')) r.push([o, 'enthält „' + n + '“', 'owner']);
-    if (st === 'iface' && !x.isDef) { for (const o of IDX.all.filter(y => stageOf(y) === 'struct' && y.children.includes(x))) r.push([o, 'besitzt Port „' + n + '“', 'owner']); }
-    if (mode === 'owner') { for (const rq of trOut(x, 'satisfy')) r.push([rq, 'Nachweis prüfen: wird erfüllt von „' + n + '“', 'check']); return r; }
-    for (const e of [...(TR.out.get(x) || []), ...(TR.inn.get(x) || [])]) if (['connect', 'flow', 'bind'].includes(e.type)) { const o = e.a === x ? e.b : e.a; r.push([o, 'verbunden mit „' + n + '“' + (e.label ? ' über ' + e.label : ''), 'stop']); }
-    for (const u of trIn(x, 'end')) r.push([u, 'Schnittstelle nutzt „' + n + '“', 'stop']);
-    for (const rq of trOut(x, 'satisfy')) r.push([rq, 'Nachweis prüfen: wird erfüllt von „' + n + '“', 'check']);
-    for (const v of trIn(x, 'verify')) r.push([v, 'Test anpassen: verifiziert „' + n + '“', 'stop']);
-    for (const v of trIn(x, 'subject')) r.push([v, (stageOf(v) === 'test' ? 'Test anpassen' : 'betroffen') + ': „' + n + '“ ist Gegenstand', 'stop']);
-    for (const a of trIn(x, 'allocate')) r.push([a, 'ist auf „' + n + '“ alloziert', 'stop']);
-    for (const p of trIn(x, 'perform')) r.push([p, 'führt „' + n + '“ aus', 'owner']);
+    for (const u of trIn(x, 'typed')) r.push([u, L('imp.isOfType', { x: n }), 'full']);
+    for (const u of trIn(x, 'spec')) r.push([u, L('imp.specializes', { x: n }), 'full']);
+    if (!x.isDef) for (const o of trIn(x, 'owns')) r.push([o, L('imp.contains', { x: n }), 'owner']);
+    if (st === 'iface' && !x.isDef) { for (const o of IDX.all.filter(y => stageOf(y) === 'struct' && y.children.includes(x))) r.push([o, L('imp.ownsPort', { x: n }), 'owner']); }
+    if (mode === 'owner') { for (const rq of trOut(x, 'satisfy')) r.push([rq, L('imp.recheck', { x: n }), 'check']); return r; }
+    for (const e of [...(TR.out.get(x) || []), ...(TR.inn.get(x) || [])]) if (['connect', 'flow', 'bind'].includes(e.type)) { const o = e.a === x ? e.b : e.a; r.push([o, e.label ? L('imp.connectedVia', { x: n, via: e.label }) : L('imp.connected', { x: n }), 'stop']); }
+    for (const u of trIn(x, 'end')) r.push([u, L('imp.ifaceUses', { x: n }), 'stop']);
+    for (const rq of trOut(x, 'satisfy')) r.push([rq, L('imp.recheck', { x: n }), 'check']);
+    for (const v of trIn(x, 'verify')) r.push([v, L('imp.adaptTest', { x: n }), 'stop']);
+    for (const v of trIn(x, 'subject')) r.push([v, L(stageOf(v) === 'test' ? 'imp.subjectTest' : 'imp.subjectOther', { x: n }), 'stop']);
+    for (const a of trIn(x, 'allocate')) r.push([a, L('imp.allocated', { x: n }), 'stop']);
+    for (const p of trIn(x, 'perform')) r.push([p, L('imp.performs', { x: n }), 'owner']);
     if (st === 'req') {
-      for (const s of trIn(x, 'satisfy')) r.push([s, 'muss „' + n + '“ weiterhin erfüllen', 'stop']);
-      for (const d of trOut(x, 'derive')) r.push([d, 'abgeleitet aus „' + n + '“', 'full']);
-      for (const d of trIn(x, 'refine')) r.push([d, 'verfeinert „' + n + '“', 'full']);
-      for (const c of trOut(x, 'owns')) if (stageOf(c) === 'req') r.push([c, 'Unteranforderung von „' + n + '“', 'full']);
+      for (const s of trIn(x, 'satisfy')) r.push([s, L('imp.mustSatisfy', { x: n }), 'stop']);
+      for (const d of trOut(x, 'derive')) r.push([d, L('imp.derivedFrom', { x: n }), 'full']);
+      for (const d of trIn(x, 'refine')) r.push([d, L('imp.refines', { x: n }), 'full']);
+      for (const c of trOut(x, 'owns')) if (stageOf(c) === 'req') r.push([c, L('imp.subReq', { x: n }), 'full']);
     }
     return r;
   }
@@ -1090,28 +1096,10 @@ function coverage() {
 
 
 /* ================= Klartext: Steckbrief eines Elements ================= */
-const KIND_PLAIN = {
-  'part def': 'ein Bauplan für Komponenten (part def)', 'part': 'eine konkrete Komponente (part)',
-  'item def': 'eine Art von Ding, das fließt oder ausgetauscht wird (item def)', 'item': 'ein Ding, das fließt oder ausgetauscht wird (item)',
-  'port def': 'eine Schnittstellenart (port def)', 'port': 'ein Anschluss (port)',
-  'interface def': 'eine Verbindungsart zwischen zwei Ports (interface def)', 'interface': 'eine konkrete Verbindung zwischen zwei Ports (interface)',
-  'connection def': 'eine Verbindungsart (connection def)', 'connection': 'eine konkrete Verbindung (connection)',
-  'attribute def': 'eine Eigenschaftsart, z. B. eine physikalische Größe (attribute def)', 'attribute': 'eine Eigenschaft mit Wert (attribute)',
-  'enum def': 'eine Aufzählung fester Werte (enum def)',
-  'requirement def': 'eine Anforderungsvorlage (requirement def)', 'requirement': 'eine konkrete Anforderung (requirement)',
-  'concern def': 'ein Anliegen eines Stakeholders (concern def)', 'concern': 'ein Anliegen (concern)',
-  'verification def': 'ein Testverfahren (verification def)', 'verification': 'ein konkreter Test (verification)',
-  'analysis def': 'eine Analyse (analysis def)', 'analysis': 'eine Analyse (analysis)',
-  'use case def': 'ein Anwendungsfall (use case def)', 'use case': 'ein Anwendungsfall (use case)',
-  'action def': 'ein Ablauf (action def)', 'action': 'ein Ablaufschritt (action)',
-  'state def': 'eine Zustandsmaschine (state def)', 'state': 'ein Zustand (state)',
-  'calc def': 'eine Berechnung (calc def)', 'calc': 'eine Berechnung (calc)',
-  'constraint def': 'eine Bedingung (constraint def)', 'constraint': 'eine Bedingung (constraint)',
-  'occurrence def': 'etwas, das zeitlich existiert (occurrence def)', 'allocation def': 'eine Zuordnungsart (allocation def)',
-  'flow': 'ein Fluss (flow)', 'package': 'ein Paket, das Elemente gruppiert (package)',
-};
-const plainKind = el => KIND_PLAIN[kindLabel(el)] || (kindLabel(el) ? '„' + kindLabel(el) + '“' : 'ein Merkmal');
-const DIR_PLAIN = { in: 'nimmt auf (in)', out: 'gibt aus (out)', inout: 'tauscht in beide Richtungen (inout)' };
+const KIND_KEYS = ['part def', 'part', 'item def', 'item', 'port def', 'port', 'interface def', 'interface', 'connection def', 'connection', 'attribute def', 'attribute', 'enum def', 'requirement def', 'requirement', 'concern def', 'concern', 'verification def', 'verification', 'analysis def', 'analysis', 'use case def', 'use case', 'action def', 'action', 'state def', 'state', 'calc def', 'calc', 'constraint def', 'constraint', 'occurrence def', 'allocation def', 'flow', 'package'];
+const kindPlain = k => (KIND_KEYS.includes(k) ? L('kind.' + k) : null);
+const plainKind = el => kindPlain(kindLabel(el)) || (kindLabel(el) ? L('kind.quoted', { k: kindLabel(el) }) : L('kind.feature'));
+const DIR_PLAIN = { get in() { return L('dir.in'); }, get out() { return L('dir.out'); }, get inout() { return L('dir.inout'); } };
 const uniq = l => [...new Set(l.filter(Boolean))];
 function listSeg(els, fmt) { const out = []; els.forEach((e, i) => { if (i) out.push(', '); out.push({ el: e }); if (fmt) { const x = fmt(e); if (x) out.push(' ' + x); } }); return out; }
 function partnersOf(el) {
@@ -1129,143 +1117,140 @@ function satisfiesOf(el) {
   const group = el.isDef ? [el, ...trIn(el, 'typed')] : [el, ...trOut(el, 'typed')];
   return uniq(group.flatMap(g => trOut(g, 'satisfy')));
 }
+// Satzvorlage → Segmente: {platzhalter} mit Element werden zu anklickbaren Verweisen
+function segT(key, p) {
+  const out = []; const str = L(key); let last = 0;
+  str.replace(/\{(\w+)\}/g, (m, k, pos) => { out.push(str.slice(last, pos)); const v = p ? p[k] : undefined; out.push(v && typeof v === 'object' && v.kind ? { el: v } : (v === undefined ? m : String(v))); last = pos + m.length; return m; });
+  out.push(str.slice(last)); return out.filter(x => x !== '');
+}
+function locText(el) { return el.file ? L('loc.fileLine', { file: el.file, line: el.line }) : L('loc.line', { line: el.line }); }
 function describe(el, impactDepth) {
-  const rows = []; const R = (k, v, gap) => { if (v && v.length) rows.push({ k, v, gap: !!gap }); };
+  const rows = []; const R = (id, v, gap) => { if (v && v.length) rows.push({ id, k: L('brief.row.' + id), v, gap: !!gap }); };
   const st = stageOf(el);
   const def = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null;
   const owner = el.parent && el.parent.name && !['package', 'root'].includes(el.parent.kind) ? el.parent : null;
-  const lead = [el.name && !el.anon ? el.name : dispName(el), ' ist ' + plainKind(el)];
-  if (def) lead.push(' vom Typ ', { el: def });
-  if (owner) lead.push(el.kind === 'port' ? ' an ' : ' in ', { el: owner });
-  const id = el.short || (def && def.short); if (id) lead.push(' – ID ' + id);
-  lead.push('.');
-  const doc = el.doc || (def && def.doc); if (doc) R('Text', ['„' + doc + '“']);
+  const lead = segT('brief.lead', { name: el.name && !el.anon ? el.name : dispName(el), kind: plainKind(el) });
+  if (def) lead.push(...segT('brief.leadType', { type: def }));
+  if (owner) lead.push(...segT(el.kind === 'port' ? 'brief.leadAt' : 'brief.leadIn', { owner }));
+  const id = el.short || (def && def.short); if (id) lead.push(...segT('brief.leadId', { id }));
+  lead.push(L('brief.leadEnd'));
+  const doc = el.doc || (def && def.doc); if (doc) R('text', [L('brief.quote', { x: doc })]);
   const supers = el.isDef ? superDefs(el) : [];
-  if (supers.length) { const inh = supers.flatMap(d => features(d).map(f => f.name)).filter(Boolean); R('Erbt von', [...listSeg(supers), inh.length ? ' – übernimmt ' + uniq(inh).slice(0, 6).join(', ') : '']); }
-  const subs = el.isDef ? trIn(el, 'spec') : []; if (subs.length) R('Spezialisiert durch', listSeg(subs));
+  if (supers.length) { const inh = supers.flatMap(d => features(d).map(f => f.name)).filter(Boolean); R('inherits', [...listSeg(supers), inh.length ? L('brief.takesOver', { list: uniq(inh).slice(0, 6).join(', ') }) : '']); }
+  const subs = el.isDef ? trIn(el, 'spec') : []; if (subs.length) R('specializedBy', listSeg(subs));
 
   if (st === 'struct' || el.kind === 'item') {
-    const parts = partsOf(el); if (parts.length) R('Besteht aus', listSeg(parts, p => p.types[0] ? '(' + shortT(p.types[0]) + (p.mult ? ' ×' + p.mult : '') + ')' : ''));
-    if (el.isDef) { const users = trIn(el, 'typed').filter(u => u.parent && u.parent.name); if (users.length) R('Verwendet in', listSeg(users.map(u => u.parent).filter((v, i, a) => a.indexOf(v) === i), o => { const u = users.find(x => x.parent === o); return 'als ' + u.name; })); else R('Verwendet in', ['noch nirgends – keine Usage dieser Definition'], true); }
-    const ports = portsOf(el); if (ports.length) R('Anschlüsse', listSeg(ports, p => { const d = portDir(p); return '– ' + (d ? DIR_PLAIN[d] : 'Richtung offen'); }));
-    const pt = partnersOf(el); if (pt.size) R('Verbunden mit', listSeg([...pt.keys()], o => pt.get(o).length ? '(' + pt.get(o).join(', ') + ')' : ''));
+    const parts = partsOf(el); if (parts.length) R('consistsOf', listSeg(parts, p => p.types[0] ? '(' + shortT(p.types[0]) + (p.mult ? ' ×' + p.mult : '') + ')' : ''));
+    if (el.isDef) { const users = trIn(el, 'typed').filter(u => u.parent && u.parent.name); if (users.length) R('usedIn', listSeg(users.map(u => u.parent).filter((v, i, a) => a.indexOf(v) === i), o => { const u = users.find(x => x.parent === o); return L('brief.as', { name: u.name }); })); else R('usedIn', [L('brief.usedNowhere')], true); }
+    const ports = portsOf(el); if (ports.length) R('ports', listSeg(ports, p => { const d = portDir(p); return '– ' + (d ? DIR_PLAIN[d] : L('brief.dirOpen')); }));
+    const pt = partnersOf(el); if (pt.size) R('connected', listSeg([...pt.keys()], o => pt.get(o).length ? '(' + pt.get(o).join(', ') + ')' : ''));
     const beh = features(el).filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed);
-    if (beh.length) R('Verhalten', listSeg(beh, b => b.performed === 'perform' ? '(führt aus)' : '(zeigt)'));
-    const allocIn = el.isDef ? [] : trIn(el, 'allocate'); if (allocIn.length) R('Darauf läuft', listSeg(allocIn));
+    if (beh.length) R('behaviour', listSeg(beh, b => L(b.performed === 'perform' ? 'brief.performsShort' : 'brief.exhibitsShort')));
+    const allocIn = el.isDef ? [] : trIn(el, 'allocate'); if (allocIn.length) R('runsHere', listSeg(allocIn));
     const sat = satisfiesOf(el);
-    if (sat.length) R('Erfüllt', listSeg(sat, r => idOf_(r) ? '[' + idOf_(r) + ']' : ''));
-    else { let anc = null; for (let p = el.parent; p && !anc; p = p.parent) if (satisfiesOf(p).length) anc = p; R('Erfüllt', anc ? ['nichts direkt – gehört zu ', { el: anc }, ', das Anforderungen erfüllt'] : ['keine Anforderung – wozu gibt es diese Komponente?'], !anc); }
+    if (sat.length) R('satisfies', listSeg(sat, r => idOf_(r) ? '[' + idOf_(r) + ']' : ''));
+    else { let anc = null; for (let p = el.parent; p && !anc; p = p.parent) if (satisfiesOf(p).length) anc = p; R('satisfies', anc ? segT('brief.satisfiedViaOwner', { x: anc }) : [L('brief.noReq')], !anc); }
     const tests = uniq([...sat.flatMap(r => trIn(r, 'verify')), ...(el.isDef ? trIn(el, 'subject') : (def ? trIn(def, 'subject') : []))]);
-    if (tests.length) R('Geprüft durch', listSeg(tests)); else if (sat.length) R('Geprüft durch', ['kein Test – die erfüllten Anforderungen sind ungeprüft'], true);
+    if (tests.length) R('testedBy', listSeg(tests)); else if (sat.length) R('testedBy', [L('brief.untested')], true);
   }
   if (st === 'iface') {
     if (el.kind === 'port') {
-      const d = portDir(el); if (!el.isDef) R('Richtung', [d ? DIR_PLAIN[d] : 'offen', el.types[0] && el.types[0].startsWith('~') ? ' – konjugiert (~): die Richtungen des Port-Typs sind umgedreht' : '']);
+      const d = portDir(el); if (!el.isDef) R('direction', [d ? DIR_PLAIN[d] : L('brief.open'), el.types[0] && el.types[0].startsWith('~') ? L('brief.conjugated') : '']);
       const pd = el.isDef ? el : def; const carried = pd ? features(pd).filter(f => f.dir || f.kind === 'attribute' || f.kind === 'item') : [];
-      if (carried.length) R('Überträgt', [carried.map(featLine).join(', ')]);
+      if (carried.length) R('carries', [carried.map(featLine).join(', ')]);
       const conn = [...(TR.out.get(el) || []), ...(TR.inn.get(el) || [])].filter(e => ['connect', 'flow', 'bind'].includes(e.type));
-      if (conn.length) R('Verbunden mit', listSeg(conn.map(e => e.a === el ? e.b : e.a), o => { const e = conn.find(x => x.a === o || x.b === o); return e.label ? '(' + e.label + ')' : ''; }));
-      else if (!el.isDef) R('Verbunden mit', ['nichts – offener Anschluss'], true);
-      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet von', listSeg(users)); }
+      if (conn.length) R('connected', listSeg(conn.map(e => e.a === el ? e.b : e.a), o => { const e = conn.find(x => x.a === o || x.b === o); return e.label ? '(' + e.label + ')' : ''; }));
+      else if (!el.isDef) R('connected', [L('brief.openPort')], true);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('usedBy', listSeg(users)); }
     } else {
-      if (el.ends && el.ends.length) R('Verbindet', [el.ends.join(' ↔ ')]);
-      const ends = el.children.filter(c => c.role === 'end'); if (ends.length) R('Enden', [ends.map(featLine).join(', ')]);
-      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet in', listSeg(users)); }
+      if (el.ends && el.ends.length) R('connects', [el.ends.join(' ↔ ')]);
+      const ends = el.children.filter(c => c.role === 'end'); if (ends.length) R('ends', [ends.map(featLine).join(', ')]);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('usedIn', listSeg(users)); }
     }
   }
   if (st === 'req') {
-    const subj = (el.isDef ? el : def || el).children.filter(c => c.role === 'subject'); if (subj.length) R('Gegenstand', [subj.map(featLine).join(', ')]);
-    const cons = el.constraints || (def && def.constraints); if (cons) R('Bedingung', [cons.join('; ')]);
-    const up = el.parent && el.parent.kind === 'requirement' ? el.parent : null; if (up) R('Teil von', [{ el: up }]);
-    const kids = trOut(el, 'owns').filter(c => c.kind === 'requirement'); if (kids.length) R('Enthält', listSeg(kids));
-    const from = trIn(el, 'derive'), to = trOut(el, 'derive'); if (from.length) R('Abgeleitet aus', listSeg(from)); if (to.length) R('Abgeleitet zu', listSeg(to));
-    const ref = [...trOut(el, 'refine'), ...trIn(el, 'refine')]; if (ref.length) R('Verfeinerung', listSeg(ref));
+    const subj = (el.isDef ? el : def || el).children.filter(c => c.role === 'subject'); if (subj.length) R('subject', [subj.map(featLine).join(', ')]);
+    const cons = el.constraints || (def && def.constraints); if (cons) R('condition', [cons.join('; ')]);
+    const up = el.parent && el.parent.kind === 'requirement' ? el.parent : null; if (up) R('partOf', [{ el: up }]);
+    const kids = trOut(el, 'owns').filter(c => c.kind === 'requirement'); if (kids.length) R('contains', listSeg(kids));
+    const from = trIn(el, 'derive'), to = trOut(el, 'derive'); if (from.length) R('derivedFrom', listSeg(from)); if (to.length) R('derivedTo', listSeg(to));
+    const ref = [...trOut(el, 'refine'), ...trIn(el, 'refine')]; if (ref.length) R('refinement', listSeg(ref));
     if (!kids.length) {
       const row = coverage().find(r => r.el === el);
       const sat = row ? row.sat : uniq(trIn(el, 'satisfy')), ver = row ? row.ver : uniq(trIn(el, 'verify'));
-      R('Umgesetzt durch', sat.length ? listSeg(sat) : ['niemand – es fehlt ein satisfy'], !sat.length);
-      R('Verifiziert durch', ver.length ? listSeg(ver) : ['kein Test – es fehlt ein verify'], !ver.length);
+      R('implementedBy', sat.length ? listSeg(sat) : [L('brief.noSatisfy')], !sat.length);
+      R('verifiedBy', ver.length ? listSeg(ver) : [L('brief.noVerify')], !ver.length);
     }
   }
   if (st === 'test') {
-    const ver = trOut(el, 'verify'); R('Prüft', ver.length ? listSeg(ver) : ['keine Anforderung – das objective enthält kein verify'], !ver.length);
-    const subj = trOut(el, 'subject'); if (subj.length) R('Prüfling', listSeg(subj));
-    const impl = uniq(ver.flatMap(r => trIn(r, 'satisfy'))); if (impl.length) R('Betrifft Umsetzung', listSeg(impl));
+    const ver = trOut(el, 'verify'); R('verifies', ver.length ? listSeg(ver) : [L('brief.noVerifyInTest')], !ver.length);
+    const subj = trOut(el, 'subject'); if (subj.length) R('unitUnderTest', listSeg(subj));
+    const impl = uniq(ver.flatMap(r => trIn(r, 'satisfy'))); if (impl.length) R('affectsImpl', listSeg(impl));
   }
   if (st === 'behav') {
     const kids = features(el).filter(c => !c.isDef && (BEHAV.has(c.kind)) && !c.anon && c.kind !== 'accept');
-    if (kids.length) R(el.kind === 'state' ? 'Zustände' : 'Schritte', listSeg(kids));
-    const params = features(el).filter(f => f.dir && !BEHAV.has(f.kind)); if (params.length) R('Ein-/Ausgänge', [params.map(featLine).join(', ')]);
+    if (kids.length) R(el.kind === 'state' ? 'states' : 'steps', listSeg(kids));
+    const params = features(el).filter(f => f.dir && !BEHAV.has(f.kind)); if (params.length) R('io', [params.map(featLine).join(', ')]);
     if (el.kind === 'state' && el.parent) {
       const tr = relsOf(el.parent).filter(r => (r.type === 'transition' || r.type === 'succession') && lastSeg(r.src) === el.name);
-      if (tr.length) R('Übergänge', [tr.map(r => (r.trigger ? 'bei ' + r.trigger : 'danach') + (r.guard ? ' [' + r.guard + ']' : '') + ' → ' + (lastSeg(r.tgt) === 'done' ? 'Ende' : lastSeg(r.tgt))).join('; ')]);
+      if (tr.length) R('transitions', [tr.map(r => (r.trigger ? L('brief.onTrigger', { x: r.trigger }) : L('brief.afterwards')) + (r.guard ? ' [' + r.guard + ']' : '') + ' → ' + (lastSeg(r.tgt) === 'done' ? L('brief.end') : lastSeg(r.tgt))).join('; ')]);
     }
     const users = el.isDef ? trIn(el, 'typed').filter(u => u.performed && u.parent) : (el.performed && el.parent ? [el] : []);
-    if (users.length) R(el.kind === 'state' ? 'Gezeigt von' : 'Ausgeführt von', listSeg(users.map(u => u.parent)));
-    const alloc = trOut(el, 'allocate'); if (alloc.length) R('Alloziert auf', listSeg(alloc));
+    if (users.length) R(el.kind === 'state' ? 'exhibitedBy' : 'performedBy', listSeg(users.map(u => u.parent)));
+    const alloc = trOut(el, 'allocate'); if (alloc.length) R('allocatedTo', listSeg(alloc));
   }
   if (st) {
     const imp = impactOf(el, impactDepth || 2);
     const n = k => imp.filter(x => stageOf(x.el) === k).length;
-    const parts = [imp.length + ' Element' + (imp.length === 1 ? '' : 'e')]; if (n('req')) parts.push(n('req') + ' Anforderung' + (n('req') > 1 ? 'en' : '')); if (n('test')) parts.push(n('test') + ' Test' + (n('test') > 1 ? 's' : ''));
-    if (!imp.length) R('Bei Änderung', ['betrifft nichts weiter im Modell']); else R('Bei Änderung', ['betrifft ' + parts[0] + (parts.length > 1 ? ', darunter ' + parts.slice(1).join(' und ') : ''), { go: 'impact', label: 'ansehen' }]);
+    const extra = []; if (n('req')) extra.push(Ln('count.requirements', n('req'))); if (n('test')) extra.push(Ln('count.tests', n('test')));
+    if (!imp.length) R('impact', [L('brief.impactNone')]);
+    else R('impact', [L('brief.impact', { total: Ln('count.elements', imp.length) }) + (extra.length ? L('brief.impactAmong', { list: Lj(extra) }) : ''), { go: 'impact', label: L('brief.show') }]);
   }
-  R('Ort', [{ src: true, label: (el.file ? el.file + ', ' : '') + 'Zeile ' + el.line }]);
+  R('location', [{ src: true, label: locText(el) }]);
   return { lead, rows };
 }
 function idOf_(el) { if (el.short) return el.short; const d = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null; return d && d.short || ''; }
 
 /* ================= Modell-Check ================= */
-const RULES = {
-  parse: { sev: 'error', title: 'Nicht verstandene Stellen im Quelltext', why: 'Der Parser hat hier etwas übersprungen. Oft ist es ein Tippfehler oder eine fehlende Klammer – dann fehlen Teile des Modells in allen Sichten.' },
-  broken: { sev: 'error', title: 'Verweis ins Leere', why: 'Eine Beziehung zeigt auf einen Namen, den es im Modell nicht gibt. Die Beziehung wirkt dann nicht – meist ein Tippfehler oder ein fehlender Import.' },
-  type: { sev: 'error', title: 'Unbekannter Typ', why: 'Der Typ hinter dem Doppelpunkt ist nirgends definiert. Ohne Definition weiß das Modell nicht, was dieses Element ist.' },
-  direction: { sev: 'error', title: 'Port-Richtungen passen nicht zusammen', why: 'Verbundene Ports sollten zueinander passen: was einer ausgibt (out), muss der andere aufnehmen (in). Zwei Ausgänge gegeneinander sind ein Kurzschluss im Modell. Lösung ist oft ein konjugierter Port (~).' },
-  unsat: { sev: 'gap', title: 'Anforderung ohne Umsetzung', why: 'Keine Komponente erfüllt diese Anforderung. Sie ist ein Versprechen ohne Umsetzung.' },
-  unver: { sev: 'gap', title: 'Anforderung ohne Test', why: 'Kein Test verifiziert diese Anforderung. Ob das System sie erfüllt, bleibt unbewiesen.' },
-  emptytest: { sev: 'gap', title: 'Test ohne Anforderung', why: 'Ein Test, der keine Anforderung verifiziert, prüft etwas, das niemand gefordert hat – oder das verify fehlt.' },
-  ambig: { sev: 'hint', title: 'Name mehrfach definiert', why: 'Gleichnamige Definitionen in verschiedenen Paketen sind erlaubt, machen unqualifizierte Verweise aber mehrdeutig. Eindeutig wird es mit Paket::Name.' },
-  openport: { sev: 'hint', title: 'Offener Anschluss', why: 'Die Komponente wird in einer Baugruppe verwendet, aber dieser Port ist nirgends verbunden. Entweder fehlt eine Verbindung, oder der Port ist überflüssig.' },
-  noreq: { sev: 'hint', title: 'Komponente ohne Anforderung', why: 'Weder die Komponente noch eine Baugruppe, zu der sie gehört, erfüllt eine Anforderung. Jede Komponente sollte sich auf eine Anforderung zurückführen lassen – sonst stellt sich die Frage, wozu sie da ist.' },
-  unused: { sev: 'hint', title: 'Definition ohne Verwendung', why: 'Diese Definition wird nirgends verwendet: keine Usage, keine Spezialisierung. Vielleicht ein Überbleibsel oder ein noch nicht eingebauter Baustein.' },
-};
+const RULE_SEV = { parse: 'error', broken: 'error', type: 'error', direction: 'error', unsat: 'gap', unver: 'gap', emptytest: 'gap', ambig: 'hint', openport: 'hint', noreq: 'hint', unused: 'hint' };
+const RULES = Object.fromEntries(Object.entries(RULE_SEV).map(([id, sev]) => [id, { sev, get title() { return L('rule.' + id + '.title'); }, get why() { return L('rule.' + id + '.why'); } }]));
 const LIB_TYPE = /^(ScalarValues|ISQ\w*|SI\w*|USCustomaryUnits|Quantities|MeasurementReferences|Items|Parts|Ports|Actions|States|Requirements|Base|Links|Occurrences|Objects|Performances|Collections|VectorValues|NumericalFunctions|TrigFunctions|Time|Metaobjects|KerML|SysML|RequirementDerivation)::/;
 const LIB_SIMPLE = new Set(['Real', 'Integer', 'Natural', 'Positive', 'Rational', 'Complex', 'Boolean', 'String', 'Number', 'NumericalValue', 'ScalarValue', 'Anything', 'Item', 'Part', 'Port', 'Action', 'State', 'Requirement', 'Occurrence', 'Interface', 'Connection', 'Flow', 'Time', 'TimeInstantValue', 'DurationValue']);
 const isLibType = t => { const n = t.replace(/^~/, ''); return LIB_TYPE.test(n) || LIB_SIMPLE.has(lastSeg(n)) || /Value$/.test(lastSeg(n)); };
 function modelChecks(warns) {
   const items = []; const I = (rule, el, msg, fix, extra) => items.push(Object.assign({ rule, sev: RULES[rule].sev, el, msg, fix, line: el ? el.line : null, file: el ? el.file : null }, extra || {}));
-  for (const w of warns || []) I('parse', null, w.msg, 'Zeile prüfen: fehlt ein ; oder eine }?', { line: w.line, file: w.file });
-  for (const b of TR.broken || []) I('broken', b.holder && b.holder.kind !== 'root' ? b.holder : null, `${b.type}: „${b.chain}“ wurde nicht gefunden`, 'Namen prüfen oder mit Paket qualifizieren, z. B. Paket::' + lastSeg(b.chain), { line: b.line, file: b.file });
-  for (const el of IDX.all) for (const t of el.types) if (!resolveDef(t, el) && !isLibType(t) && !(IDX.byName.get(lastSeg(t)) || []).length) I('type', el, `${dispName(el)}: Typ „${t}“ ist nicht definiert`, `${el.kind === 'feature' ? 'part' : el.kind} def ${lastSeg(t)} { … }  // oder Import ergänzen`);
+  for (const w of warns || []) I('parse', null, w.msg, L('chk.fix.parse'), { line: w.line, file: w.file });
+  for (const b of TR.broken || []) I('broken', b.holder && b.holder.kind !== 'root' ? b.holder : null, L('chk.broken', { type: b.type, chain: b.chain }), L('chk.fix.broken', { name: lastSeg(b.chain) }), { line: b.line, file: b.file });
+  for (const el of IDX.all) for (const t of el.types) if (!resolveDef(t, el) && !isLibType(t) && !(IDX.byName.get(lastSeg(t)) || []).length) I('type', el, L('chk.type', { el: dispName(el), t }), `${el.kind === 'feature' ? 'part' : el.kind} def ${lastSeg(t)} { … }  // ` + L('chk.fix.typeComment'));
   for (const l of TR.links || []) {
     if (l.deleg || l.type === 'bind') continue;
     const da = l.pa.kind === 'port' ? portDir(l.pa) : null, db = l.pb.kind === 'port' ? portDir(l.pb) : null;
-    if (da && db && da === db && da !== 'inout') I('direction', l.pa, `${dispName(l.pa)} und ${dispName(l.pb)} sind beide „${da}“`, `einen der beiden Ports konjugieren: port ${l.pb.name} : ~${l.pb.types[0] ? shortT(l.pb.types[0]).replace(/^~/, '') : 'PortTyp'};`, { line: l.line, file: l.file });
-    else if (l.type === 'flow' && (da === 'in' || db === 'out')) I('direction', l.pa, `Fluss läuft von ${dispName(l.pa)} (${da || '?'}) nach ${dispName(l.pb)} (${db || '?'}) – gegen die Port-Richtung`, 'Quelle und Ziel des flow tauschen oder Port-Richtungen prüfen', { line: l.line, file: l.file });
+    if (da && db && da === db && da !== 'inout') I('direction', l.pa, L('chk.dirSame', { a: dispName(l.pa), b: dispName(l.pb), d: da }), L('chk.fix.conjugate', { code: `port ${l.pb.name} : ~${l.pb.types[0] ? shortT(l.pb.types[0]).replace(/^~/, '') : 'PortType'};` }), { line: l.line, file: l.file });
+    else if (l.type === 'flow' && (da === 'in' || db === 'out')) I('direction', l.pa, L('chk.dirFlow', { a: dispName(l.pa), da: da || '?', b: dispName(l.pb), db: db || '?' }), L('chk.fix.flow'), { line: l.line, file: l.file });
   }
   for (const r of coverage()) {
     if (r.status === 'group') continue;
-    if (!r.sat.length) I('unsat', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `satisfy ${r.el.name} by <komponente>;`);
+    if (!r.sat.length) I('unsat', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `satisfy ${r.el.name} by <${L('chk.ph.component')}>;`);
     if (!r.ver.length) I('unver', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `verification def ${r.el.name[0].toUpperCase() + r.el.name.slice(1)}Test { objective { verify ${r.el.name}; } }`);
   }
-  for (const t of IDX.all.filter(e => stageOf(e) === 'test' && e.isDef)) if (!trOut(t, 'verify').length) I('emptytest', t, t.name, 'objective { verify <anforderung>; }');
-  for (const a of IDX.ambig) I('ambig', a.defs[0], `„${a.name}“: ${a.defs.map(d => d.qn).join(', ')}`, `Verweise qualifizieren, z. B. : ${a.defs[0].qn}`, { ambig: a.name });
+  for (const t of IDX.all.filter(e => stageOf(e) === 'test' && e.isDef)) if (!trOut(t, 'verify').length) I('emptytest', t, t.name, `objective { verify <${L('chk.ph.requirement')}>; }`);
+  for (const a of IDX.ambig) I('ambig', a.defs[0], L('chk.ambig', { name: a.name, list: a.defs.map(d => d.qn).join(', ') }), L('chk.fix.qualify', { qn: a.defs[0].qn }), { ambig: a.name });
   // offene Anschlüsse
   const connected = new Set(); for (const e of TR.edges) if (['connect', 'flow', 'bind', 'end'].includes(e.type)) { connected.add(e.a); connected.add(e.b); }
   for (const p of IDX.all.filter(e => e.kind === 'port' && !e.isDef && e.parent && stageOf(e.parent) === 'struct')) {
     const o = p.parent; const used = o.isDef ? trIn(o, 'typed').some(u => u.parent && stageOf(u.parent) === 'struct') : stageOf(o.parent) === 'struct';
-    if (used && !connected.has(p)) I('openport', p, `${o.name}.${p.name} ist nicht verbunden`, `connect <teil>.${p.name} to <anderesTeil>.<port>;`);
+    if (used && !connected.has(p)) I('openport', p, L('chk.openPort', { o: o.name, p: p.name }), `connect <${L('chk.ph.part')}>.${p.name} to <${L('chk.ph.otherPart')}>.<port>;`);
   }
   // Komponenten ohne Anforderungsbezug
   const covered = new Set(); const mark = el => { if (!el || covered.has(el)) return; covered.add(el); for (const s of el.isDef ? superDefs(el) : []) mark(s); for (const p of partsOf(el)) mark(p); for (const t of el.isDef ? trIn(el, 'typed') : trOut(el, 'typed')) if (!covered.has(t)) { covered.add(t); for (const p of partsOf(t)) mark(p); if (t.isDef) superDefs(t).forEach(mark); } };
   for (const e of TR.edges) if (e.type === 'satisfy') mark(e.a);
-  if (covered.size) for (const el of IDX.all.filter(e => e.kind === 'part' && e.name && (e.isDef || stageOf(e.parent) === 'struct'))) if (!covered.has(el) && !(el.isDef && trIn(el, 'typed').length)) I('noreq', el, dispName(el), `satisfy <anforderung> by ${el.isDef ? '<usage von ' + el.name + '>' : el.name};`);
+  if (covered.size) for (const el of IDX.all.filter(e => e.kind === 'part' && e.name && (e.isDef || stageOf(e.parent) === 'struct'))) if (!covered.has(el) && !(el.isDef && trIn(el, 'typed').length)) I('noreq', el, dispName(el), `satisfy <${L('chk.ph.requirement')}> by ${el.isDef ? '<' + L('chk.ph.usageOf', { x: el.name }) + '>' : el.name};`);
   // unbenutzte Definitionen
   for (const d of IDX.all.filter(e => e.isDef && e.name && ['part', 'port', 'item', 'interface', 'connection', 'action', 'state', 'requirement'].includes(e.kind))) {
     const usedBy = (TR.inn.get(d) || []).some(e => ['typed', 'spec', 'subject', 'satisfy', 'verify', 'allocate'].includes(e.type)) || (TR.out.get(d) || []).some(e => e.type === 'allocate');
     const referenced = IDX.all.some(e => e !== d && (e.types.concat(e.specs).some(t => lastSeg(t) === d.name)));
-    if (!usedBy && !referenced) I('unused', d, `${kindLabel(d)} ${d.name}`, `part x : ${d.name};  // verwenden – oder Definition entfernen`);
+    if (!usedBy && !referenced) I('unused', d, `${kindLabel(d)} ${d.name}`, `part x : ${d.name};  // ` + L('chk.fix.unusedComment'));
   }
   return items;
 }
-if (typeof module !== 'undefined') module.exports = { describe, modelChecks, RULES, KIND_PLAIN, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
+if (typeof module !== 'undefined') module.exports = { L, Ln, Lj, setDicts, setLang, getLang: () => LANG, describe, modelChecks, RULES, kindPlain, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };

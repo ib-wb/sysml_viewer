@@ -1,0 +1,10 @@
+{
+  "desc": "Navigator and diagrams for SysML v2 text models: requirement coverage, traceability, impact analysis, structure, connection, state and action diagrams.",
+  "cmd.open": "Open viewer",
+  "cmd.reveal": "Show element in navigator",
+  "cmd.refresh": "Reload model files",
+  "cfg.followNavigator": "When enabled, the editor jumps to the matching location whenever the focus in the navigator changes. Otherwise only when a line link is clicked.",
+  "cfg.include": "Glob pattern for the model files the viewer reads.",
+  "cfg.exclude": "Glob pattern for folders that are skipped (e.g. the standard library).",
+  "cfg.liveUpdate": "Update the view while typing (unsaved changes), not only on save."
+}

@@ -66,6 +66,22 @@ Ein vollständiges Beispiel mit zwei absichtlichen Lücken liegt in `beispiel/in
 
 Der Parser versteht die gängigen Konstrukte der Textnotation, prüft das Modell aber nicht auf Gültigkeit: Ausdrücke, Standardbibliothek, Sichtbarkeit und Import-Auflösung werden nicht ausgewertet; Namen werden über den einfachen Namen und die Paketnähe aufgelöst. Für Syntaxprüfung eignet sich zusätzlich eine Sprach-Erweiterung wie SysIDE.
 
+## Sprachen
+
+Oberfläche und Erklärtexte gibt es auf Deutsch und Englisch; umgeschaltet wird oben rechts. Beim ersten Start nimmt der Viewer die Browsersprache, in VS Code die Sprache von VS Code; gibt es diese Sprache nicht, Englisch. Die Wahl im Menü wird gemerkt und hat Vorrang.
+
+Nicht übersetzt werden SysML-Schlüsselwörter (`part def`, `satisfy`, `verify` …) und Abteilungsnamen wie `parts` oder `ports` – das ist Notation, kein Oberflächentext. Ebenso bleibt der Inhalt des Modells, wie er ist.
+
+**Eine Sprache ergänzen**, z. B. Französisch:
+
+1. `src/lang/de.json` nach `src/lang/fr.json` kopieren.
+2. `_name` (Anzeige im Menü, z. B. `Français`) und `_locale` (z. B. `fr-FR`) setzen, dann die Werte übersetzen. Schlüssel nicht ändern.
+3. Platzhalter wie `{name}` oder `{n}` unverändert übernehmen. Schlüssel mit `.one` / `.other` sind Pluralformen; Sprachen mit weiteren Formen (z. B. `.few`, `.many`) können sie ergänzen – gewählt wird über `Intl.PluralRules`.
+4. `npm test` – der Sprachtest meldet fehlende oder überzählige Schlüssel und abweichende Platzhalter.
+5. `npm run build` – die Datei landet automatisch im Viewer und im Sprachmenü.
+
+Fehlt ein Schlüssel in einer Sprache, zeigt der Viewer den deutschen Text. Für die Befehle und Einstellungen der VS-Code-Erweiterung zusätzlich `vscode-extension/package.nls.fr.json` anlegen (Vorlage: `package.nls.de.json`).
+
 ## Aufbau des Repositorys
 
 ```
@@ -76,11 +92,12 @@ src/                 Quellen des Viewers
   learn.js           Lernhilfen: gemeinsamer Fokus, Steckbrief, Modell-Check, Notationserklärungen
   page.html          Seitengerüst und Styles
   diag.css           Styles der Diagramme (auch für SVG-Export)
+  lang/              Oberflächentexte je Sprache: de.json (Basis), en.json, …
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
 beispiel/            Beispielprojekt Indoorroboter (5 Dateien)
-tests/               Parser-, Traceability-, Steckbrief- und Check-Tests; Test der Erweiterung gegen ein VS-Code-Mock
+tests/               Parser-, Traceability-, Steckbrief-, Check- und Sprachtests; Test der Erweiterung gegen ein VS-Code-Mock
   fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
 ```
 
@@ -89,7 +106,7 @@ tests/               Parser-, Traceability-, Steckbrief- und Check-Tests; Test d
 ```bash
 npm install          # elkjs (Layout) und vsce (Paketierung)
 npm run build        # src/ → dist/sysml-viewer.html + vscode-extension/media/
-npm test             # Parser, Traceability, Erweiterung
+npm test             # Parser, Traceability, Sprachdateien, Erweiterung
 npm run package      # .vsix nach dist/
 ```
 

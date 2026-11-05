@@ -68,6 +68,7 @@ function showInDiagram(F) {
 
 /* ---------- Fokusleiste & Steckbrief ---------- */
 let briefOpen = store.get('brief') !== '0';
+const ROW_TIP = { inherits: 'r-spec', specializedBy: 'r-spec', consistsOf: 'r-owns', partOf: 'r-owns', contains: 'r-owns', usedIn: 'r-typed', usedBy: 'r-typed', ports: 'r-port', connected: 'r-connect', connects: 'r-connect', ends: 'r-connect', behaviour: 'r-perform', performedBy: 'r-perform', exhibitedBy: 'r-perform', runsHere: 'r-allocate', allocatedTo: 'r-allocate', satisfies: 'r-satisfy', implementedBy: 'r-satisfy', affectsImpl: 'r-satisfy', testedBy: 'r-verify', verifiedBy: 'r-verify', verifies: 'r-verify', subject: 'r-subject', unitUnderTest: 'r-subject', derivedFrom: 'r-derive', derivedTo: 'r-derive', refinement: 'r-refine' };
 function segHTML(v) {
   return v.map(x => {
     if (typeof x === 'string') return esc(x);
@@ -79,24 +80,24 @@ function segHTML(v) {
 }
 function briefHTML(el) {
   let d; try { d = describe(el, NAV.depth); } catch (e) { console.error(e); return ''; }
-  return `<p class="blead">${segHTML(d.lead)}</p><dl class="brows">${d.rows.map(r => `<div class="${r.gap ? 'bgap' : ''}"><dt>${esc(r.k)}</dt><dd>${segHTML(r.v)}</dd></div>`).join('')}</dl>`;
+  return `<p class="blead">${segHTML(d.lead)}</p><dl class="brows">${d.rows.map(r => `<div class="${r.gap ? 'bgap' : ''}"><dt${ROW_TIP[r.id] ? ` data-tip="${ROW_TIP[r.id]}"` : ''}>${esc(r.k)}</dt><dd>${segHTML(r.v)}</dd></div>`).join('')}</dl>`;
 }
 function renderFocusBar() {
   const bar = $('focusBar'), brief = $('brief');
   const F = IDXok ? navFocus() : null;
   if (!F) {
-    bar.innerHTML = `<span class="fb-empty">Kein Element im Fokus. Wähle eines in der Abdeckung, über die Suche, im Modellbaum oder durch Klick ins Diagramm.</span>`;
+    bar.innerHTML = `<span class="fb-empty">${esc(L('focus.none'))}</span>`;
     brief.hidden = true; return;
   }
   const st = stageOf(F);
-  bar.innerHTML = `<span class="fb-lab">Fokus</span>
+  bar.innerHTML = `<span class="fb-lab">${esc(L('focus.label'))}</span>
     <span class="fb-el s-${st || 'x'}"><span class="fb-k" data-tip-kind="${esc(kindLabel(F))}">${esc(kindLabel(F) || F.kind)}</span><b>${esc(dispName(F))}</b></span>
     <span class="fb-acts">
-      <button type="button" class="fbb" data-fb="brief" aria-expanded="${briefOpen}">${briefOpen ? 'Steckbrief ausblenden' : 'Steckbrief'}</button>
-      ${st ? `<button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'trace' ? ' on' : ''}" data-fb="trace">Rückverfolgung</button><button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'impact' ? ' on' : ''}" data-fb="impact">Auswirkung</button>` : ''}
-      <button type="button" class="fbb${S.mode === 'diag' ? ' on' : ''}" data-fb="diag">Im Diagramm</button>
-      ${isOpenable(F) ? '<button type="button" class="fbb" data-fb="detail">Detaildiagramm</button>' : ''}
-      <button type="button" class="fbb" data-fb="src">Quelltext</button>
+      <button type="button" class="fbb" data-fb="brief" aria-expanded="${briefOpen}">${esc(L(briefOpen ? 'focus.briefHide' : 'focus.brief'))}</button>
+      ${st ? `<button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'trace' ? ' on' : ''}" data-fb="trace">${esc(L('nav.tab.trace'))}</button><button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'impact' ? ' on' : ''}" data-fb="impact">${esc(L('nav.tab.impact'))}</button>` : ''}
+      <button type="button" class="fbb${S.mode === 'diag' ? ' on' : ''}" data-fb="diag">${esc(L('focus.inDiagram'))}</button>
+      ${isOpenable(F) ? `<button type="button" class="fbb" data-fb="detail">${esc(L('focus.detail'))}</button>` : ''}
+      <button type="button" class="fbb" data-fb="src">${esc(L('ui.tab.code'))}</button>
     </span>`;
   brief.hidden = !briefOpen;
   if (briefOpen) brief.innerHTML = briefHTML(F);
@@ -121,103 +122,102 @@ function briefClick(e, onEl) {
 $('brief').addEventListener('click', e => briefClick(e, el => { if (S.mode === 'nav') navGo(el, NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab); else setFocus(el); }));
 
 /* ---------- Modell-Check ---------- */
-const SEV = { error: ['Fehler', 'Das Modell ist an dieser Stelle falsch oder unvollständig verstanden.'], gap: ['Lücke', 'Etwas fehlt in der Kette Anforderung → Umsetzung → Nachweis.'], hint: ['Hinweis', 'Kein Fehler, aber eine Stelle, die einen zweiten Blick wert ist.'] };
+const SEV = Object.fromEntries(['error', 'gap', 'hint'].map(k => [k, { get 0() { return L('sev.' + k); }, get 1() { return L('sev.' + k + '.hint'); } }]));
 let checkCache = null;
 function currentChecks() { if (!checkCache) checkCache = modelChecks(parseRes ? parseRes.warns : []); return checkCache; }
 function renderCheck(body) {
   const items = currentChecks();
   const cnt = s => items.filter(i => i.sev === s).length;
-  if (!items.length) { body.innerHTML = `<div class="nempty"><h3>Keine Auffälligkeiten</h3><p>Der Modell-Check hat nichts gefunden: Jede Anforderung ist umgesetzt und geprüft, alle Verweise lösen sich auf, die Port-Richtungen passen.</p></div>`; return; }
+  if (!items.length) { body.innerHTML = `<div class="nempty"><h3>${esc(L('check.cleanTitle'))}</h3><p>${esc(L('check.cleanText'))}</p></div>`; return; }
   const groups = Object.keys(RULES).map(r => ({ r, list: items.filter(i => i.rule === r) })).filter(g => g.list.length);
   body.innerHTML = `<div class="cov-sum">
-      ${['error', 'gap', 'hint'].map(s => `<div class="tile sev-${s}" data-tip-sev="${s}"><b>${cnt(s)}</b><span>${SEV[s][0]}${cnt(s) === 1 ? '' : s === 'error' ? '' : s === 'gap' ? 'n' : 'e'}</span></div>`).join('')}
+      ${['error', 'gap', 'hint'].map(s => `<div class="tile sev-${s}" data-tip-sev="${s}"><b>${cnt(s)}</b><span>${esc(Ln('sev.count.' + s, cnt(s)))}</span></div>`).join('')}
     </div>
-    <p class="muted chk-intro">Der Check prüft, was ein Werkzeug ohne vollständigen SysML-Compiler sicher erkennen kann. Element anklicken: Rückverfolgung ab dort. Zeile anklicken: Quelltext.</p>
+    <p class="muted chk-intro">${esc(L('check.intro'))}</p>
     ${groups.map(g => `<details class="chk" open>
       <summary><span class="pill sv-${RULES[g.r].sev}">${SEV[RULES[g.r].sev][0]}</span><b>${esc(RULES[g.r].title)}</b><span class="muted">${g.list.length}</span></summary>
       <p class="why">${esc(RULES[g.r].why)}</p>
       <ul>${g.list.map(i => `<li>
-        <div class="chk-l">${i.el && stageOf(i.el) ? `<button type="button" class="blink s-${stageOf(i.el)}" data-eid="${i.el.eid}">${esc(dispName(i.el))}</button>` : ''}<span>${esc(i.msg)}</span>${i.line ? `<button type="button" class="bact" data-file="${esc(i.file || '')}" data-line="${i.line}">${esc((S.files.length > 1 && i.file ? i.file + ', ' : '') + 'Zeile ' + i.line)}</button>` : ''}${i.ambig ? `<button type="button" class="bact" data-ambig="${esc(i.ambig)}">Auswahl treffen</button>` : ''}</div>
-        <div class="chk-fix"><code>${esc(i.fix)}</code><button type="button" class="cp-btn" data-copy="${esc(i.fix)}" title="Vorschlag kopieren">Kopieren</button></div>
+        <div class="chk-l">${i.el && stageOf(i.el) ? `<button type="button" class="blink s-${stageOf(i.el)}" data-eid="${i.el.eid}">${esc(dispName(i.el))}</button>` : ''}<span>${esc(i.msg)}</span>${i.line ? `<button type="button" class="bact" data-file="${esc(i.file || '')}" data-line="${i.line}">${esc(locText({ file: S.files.length > 1 ? i.file : null, line: i.line }))}</button>` : ''}${i.ambig ? `<button type="button" class="bact" data-ambig="${esc(i.ambig)}">${esc(L('check.pick'))}</button>` : ''}</div>
+        <div class="chk-fix"><code>${esc(i.fix)}</code><button type="button" class="cp-btn" data-copy="${esc(i.fix)}" title="${esc(L('check.copyTitle'))}">${esc(L('check.copy'))}</button></div>
       </li>`).join('')}</ul>
     </details>`).join('')}`;
 }
 $('nbody').addEventListener('click', e => {
   const c = e.target.closest('[data-copy]');
-  if (c) { e.stopPropagation(); const t = c.dataset.copy; try { navigator.clipboard.writeText(t).then(() => toast('Vorschlag kopiert'), () => toast(t)); } catch (x) { toast(t); } return; }
+  if (c) { e.stopPropagation(); const t = c.dataset.copy; try { navigator.clipboard.writeText(t).then(() => toast(L('check.copied')), () => toast(t)); } catch (x) { toast(t); } return; }
   const l = e.target.closest('.bact[data-line]'); if (l) { e.stopPropagation(); gotoLine(l.dataset.file || null, +l.dataset.line); return; }
   const a = e.target.closest('[data-ambig]'); if (a) { e.stopPropagation(); openAmbig(a.dataset.ambig); return; }
 }, true);
 
 /* ---------- Notation erklären ---------- */
-const NOTE = {
-  'e-comp': ['Komposition', 'Das Ganze (Seite mit der gefüllten Raute) besteht aus dem Teil an der Pfeilspitze. Die Beschriftung nennt den Namen des Teils und ggf. die Anzahl.', 'part def Roboter { part akku : Akku; }'],
-  'e-spec': ['Spezialisierung :>', 'Das hohle Dreieck zeigt auf die allgemeinere Definition. Die andere erbt alle ihre Merkmale und kann eigene ergänzen.', 'part def Akku :> Komponente;'],
-  'e-typed': ['Typisierung / Verweis', 'Gestrichelt: Das Element ist vom Typ der Definition an der Pfeilspitze, oder es verweist darauf (z. B. exhibit, perform, subject).', 'port ausgang : EnergiePort;'],
-  'e-defby': ['Usage und Definition', 'Verbindet eine konkrete Verwendung (abgerundet) mit ihrem Bauplan (eckig, am Dreieck).', 'part roboter : Roboter;'],
-  'e-conn': ['Verbindung (connect)', 'Zwei Ports oder Teile sind verbunden. Eine Linie ohne Pfeil sagt nichts über eine Flussrichtung.', 'connect lidar.scanAus to rechner.scanEin;'],
-  'e-iface': ['Schnittstelle (interface)', 'Dicke Linie: eine Verbindung, deren Art eine interface def festlegt. Die Beschriftung nennt diesen Typ.', 'interface : Versorgung connect akku.ausgang to rechner.energie;'],
-  'e-flow': ['Fluss (flow)', 'Etwas fließt in Pfeilrichtung von einem Ausgang zu einem Eingang: Daten, Energie oder Material. Die Beschriftung nennt, was fließt.', 'flow of Fahrbefehl from rechner.fahrAus to antrieb.fahrEin;'],
-  'e-bind': ['Bindung (bind)', 'Beide Seiten haben immer denselben Wert.', 'bind a.x = b.y;'],
-  'e-trans': ['Transition', 'Wechsel von einem Zustand in den nächsten. Beschriftung: Auslöser [Bedingung] / Wirkung.', 'accept StartBefehl then Navigation;'],
-  'e-succ': ['Nachfolge (then)', 'Der Schritt an der Pfeilspitze beginnt, wenn der vorige fertig ist. [ … ] ist die Bedingung einer Verzweigung.', 'first lokalisieren then pfadPlanen;'],
-  'e-satisfy': ['satisfy – erfüllt', 'Die Komponente erfüllt die Anforderung an der Pfeilspitze. Diese Beziehung ist der Kern der Rückverfolgung.', 'satisfy laufzeit by roboter.akku;'],
-  'e-contain': ['enthält', 'Die Anforderung mit dem Kreis-Plus fasst die andere als Unteranforderung zusammen.', 'requirement r { requirement a : A; }'],
-  'e-inner': ['besteht aus', 'Führt zur inneren Struktur: welche Teile darin stecken und wie sie verbunden sind.', ''],
-  'def': ['Definition (eckige Ecken)', 'Ein Bauplan, z. B. part def. Eine Definition beschreibt, wie etwas aufgebaut ist – im System steckt sie erst, wenn sie verwendet wird.', 'part def Akku { … }'],
-  'usage': ['Usage (abgerundete Ecken)', 'Eine konkrete Verwendung einer Definition in einem bestimmten Zusammenhang, z. B. der Akku im Roboter.', 'part akku : Akku;'],
-  'frame': ['Rahmen: innere Struktur', 'Alles im Rahmen gehört zu diesem Element. Ports auf dem Rand sind seine Anschlüsse nach außen.', ''],
-  'file': ['Datei', 'Rahmen um alle Definitionen aus einer .sysml-Datei.', ''],
-  'collapsed': ['Gestrichelter Rand', 'Dieses Teil enthält weitere Teile, die bei der gewählten Tiefe ausgeblendet sind. Tiefe oben erhöhen oder das Teil anklicken.', ''],
-  'inherited': ['^ geerbt', 'Das Merkmal ist nicht hier festgelegt, sondern in einer allgemeineren Definition – es wird geerbt.', 'part def Akku :> Komponente;  // erbt masse'],
-  'redef': [':>> Redefinition', 'Ein geerbtes Merkmal wird hier neu festgelegt, z. B. mit einem eigenen Wert.', ':>> masse = 0.35;'],
-  'feature': ['Merkmal', 'Schreibweise: Name : Typ [Anzahl] = Wert. Der Typ verweist auf eine Definition.', 'attribute kapazitaet : Real = 5.2;'],
-  'init': ['Startpunkt', 'Hier beginnt der Ablauf bzw. die Zustandsmaschine.', 'entry; then Bereit;   bzw.   first start;'],
-  'final': ['Ende', 'Der Ablauf ist abgeschlossen.', 'then done;'],
-  'decide': ['Entscheidung / Zusammenführung', 'Raute: Der Ablauf verzweigt nach Bedingungen [ … ] oder läuft wieder zusammen.', 'decide; if ok then done; else lokalisieren;'],
-  'fork': ['Gabelung / Vereinigung', 'Balken: Mehrere Schritte laufen parallel bzw. warten aufeinander.', 'fork; then a; then b;'],
-  'amb': ['Name mehrfach definiert', 'Es gibt mehrere Definitionen mit diesem Namen. Unqualifizierte Verweise sind dann mehrdeutig – im Modell besser Paket::Name schreiben.', 'part m : Struktur::Motor;'],
-  'port-generic': ['Port (Anschluss)', 'Das Quadrat auf dem Rand ist ein Anschluss. Das Dreieck darin zeigt die Richtung: in das Teil hinein (in) oder heraus (out). Ohne Dreieck ist die Richtung offen.', 'port ausgang : ~EnergiePort;'],
-  'c-attributes': ['attributes', 'Eigenschaften mit Typ und ggf. Wert, z. B. Masse oder Kapazität.', 'attribute masse : Masse;'],
-  'c-ports': ['ports', 'Die Anschlüsse dieses Elements.', 'port energie : EnergiePort;'],
-  'c-parts': ['parts', 'Die Teile, aus denen dieses Element besteht.', 'part motor : Motor[2];'],
-  'c-directed features': ['directed features', 'Merkmale mit Richtung: in = kommt herein, out = geht hinaus. Typisch in port def und Aktionen.', 'out item cmd : Fahrbefehl;'],
-  'c-ends': ['ends', 'Die beiden Enden einer Verbindungsart – welche Port-Typen sie verbindet.', 'end quelle : ~EnergiePort;'],
-  'c-actions': ['actions', 'Abläufe, die dieses Element ausführt.', 'perform action navigation : NavigiereZumZiel;'],
-  'c-states': ['states', 'Zustandsverhalten, das dieses Element zeigt.', 'exhibit state betrieb : Betriebszustaende;'],
-  'c-constraints': ['constraints', 'Bedingungen, die gelten müssen.', 'require constraint { laufzeit >= 2 }'],
-  'c-literals': ['literals', 'Die festen Werte einer Aufzählung.', 'enum def Farbe { rot; gruen; }'],
-  'r-satisfy': ['erfüllt', 'satisfy: Eine Komponente setzt eine Anforderung um.', 'satisfy laufzeit by roboter.akku;'],
-  'r-verify': ['verifiziert / prüft', 'verify: Ein Test weist nach, dass eine Anforderung erfüllt ist.', 'objective { verify laufzeit; }'],
-  'r-derive': ['abgeleitet', 'derivation: Eine Anforderung folgt aus einer anderen.', '#derivation connection { end #original ::> a; end #derive ::> b; }'],
-  'r-refine': ['verfeinert', 'refinement: Ein Element beschreibt ein anderes genauer.', '#refinement dependency from a to b;'],
-  'r-allocate': ['alloziert', 'allocate: Etwas Logisches (z. B. ein Ablauf) wird etwas Physischem (z. B. einem Rechner) zugeordnet.', 'allocate NavigiereZumZiel to roboter.rechner;'],
-  'r-owns': ['Teil von / enthält', 'Komposition: Das Element gehört zu einem größeren Ganzen bzw. enthält kleinere Teile.', 'part def Roboter { part akku : Akku; }'],
-  'r-typed': ['Definition / Usage', 'Typisierung: die Verbindung zwischen Bauplan (Definition) und konkreter Verwendung (Usage).', 'part akku : Akku;'],
-  'r-spec': ['spezialisiert', 'Spezialisierung :> – erbt alle Merkmale der allgemeineren Definition.', 'part def Akku :> Komponente;'],
-  'r-connect': ['verbunden / Gegenstelle', 'Zwei Teile sind über Ports verbunden; die Klammer nennt Schnittstelle und Ports.', 'interface : Versorgung connect akku.ausgang to rechner.energie;'],
-  'r-port': ['Port', 'Ein Anschluss der Komponente.', 'port ausgang : ~EnergiePort;'],
-  'r-perform': ['führt aus / zeigt', 'perform bzw. exhibit: Die Komponente führt einen Ablauf aus bzw. zeigt ein Zustandsverhalten.', 'perform action navigation : NavigiereZumZiel;'],
-  'r-subject': ['Gegenstand / Prüfling', 'subject: Worauf sich eine Anforderung oder ein Test bezieht.', 'subject pruefling : Roboter;'],
-  'r-flow': ['liefert / erhält', 'flow: Etwas fließt von einem Ausgang zu einem Eingang.', 'flow of Scan from lidar.scanAus to rechner.scanEin;'],
+const NOTE_CODE = {
+  'e-comp': "part def Roboter { part akku : Akku; }",
+  'e-spec': "part def Akku :> Komponente;",
+  'e-typed': "port ausgang : EnergiePort;",
+  'e-defby': "part roboter : Roboter;",
+  'e-conn': "connect lidar.scanAus to rechner.scanEin;",
+  'e-iface': "interface : Versorgung connect akku.ausgang to rechner.energie;",
+  'e-flow': "flow of Fahrbefehl from rechner.fahrAus to antrieb.fahrEin;",
+  'e-bind': "bind a.x = b.y;",
+  'e-trans': "accept StartBefehl then Navigation;",
+  'e-succ': "first lokalisieren then pfadPlanen;",
+  'e-satisfy': "satisfy laufzeit by roboter.akku;",
+  'e-contain': "requirement r { requirement a : A; }",
+  'e-inner': "",
+  'def': "part def Akku { … }",
+  'usage': "part akku : Akku;",
+  'frame': "",
+  'file': "",
+  'collapsed': "",
+  'inherited': "part def Akku :> Komponente;  // erbt masse",
+  'redef': ":>> masse = 0.35;",
+  'feature': "attribute kapazitaet : Real = 5.2;",
+  'init': "entry; then Bereit;   bzw.   first start;",
+  'final': "then done;",
+  'decide': "decide; if ok then done; else lokalisieren;",
+  'fork': "fork; then a; then b;",
+  'amb': "part m : Struktur::Motor;",
+  'port-generic': "port ausgang : ~EnergiePort;",
+  'c-attributes': "attribute masse : Masse;",
+  'c-ports': "port energie : EnergiePort;",
+  'c-parts': "part motor : Motor[2];",
+  'c-directed features': "out item cmd : Fahrbefehl;",
+  'c-ends': "end quelle : ~EnergiePort;",
+  'c-actions': "perform action navigation : NavigiereZumZiel;",
+  'c-states': "exhibit state betrieb : Betriebszustaende;",
+  'c-constraints': "require constraint { laufzeit >= 2 }",
+  'c-literals': "enum def Farbe { rot; gruen; }",
+  'r-satisfy': "satisfy laufzeit by roboter.akku;",
+  'r-verify': "objective { verify laufzeit; }",
+  'r-derive': "#derivation connection { end #original ::> a; end #derive ::> b; }",
+  'r-refine': "#refinement dependency from a to b;",
+  'r-allocate': "allocate NavigiereZumZiel to roboter.rechner;",
+  'r-owns': "part def Roboter { part akku : Akku; }",
+  'r-typed': "part akku : Akku;",
+  'r-spec': "part def Akku :> Komponente;",
+  'r-connect': "interface : Versorgung connect akku.ausgang to rechner.energie;",
+  'r-port': "port ausgang : ~EnergiePort;",
+  'r-perform': "perform action navigation : NavigiereZumZiel;",
+  'r-subject': "subject pruefling : Roboter;",
+  'r-flow': "flow of Scan from lidar.scanAus to rechner.scanEin;"
 };
-const REL_TIP = [[/erfüllt|setzt .* um|Umsetzung/, 'r-satisfy'], [/verifiziert|prüft|Test/, 'r-verify'], [/abgeleitet/, 'r-derive'], [/verfeinert/, 'r-refine'], [/alloziert|Darauf läuft/, 'r-allocate'], [/Teil von|enthält|gehört zu/, 'r-owns'], [/Definition|Usage|vom Typ/, 'r-typed'], [/spezialisiert/, 'r-spec'], [/Gegenstelle|verbunden|Partner|Verbindung an|Ende von/, 'r-connect'], [/Port/, 'r-port'], [/führt aus|ausgeführt|zeigt|gezeigt/, 'r-perform'], [/Gegenstand|testet|Prüfling|betrifft/, 'r-subject'], [/liefert|erhält/, 'r-flow']];
-const kindTip = k => { const t = KIND_PLAIN[k]; return t ? ['«' + k + '»', t.charAt(0).toUpperCase() + t.slice(1) + '.', ''] : null; };
+const NOTE = new Proxy({}, { get: (o, k) => typeof k === 'string' && k in NOTE_CODE ? [L('note.' + k + '.t'), L('note.' + k + '.x'), NOTE_CODE[k]] : undefined });
+const kindTip = k => { const t = kindPlain(k); return t ? ['«' + k + '»', t.charAt(0).toUpperCase() + t.slice(1) + '.', ''] : null; };
 function tipFor(t) {
   if (!t || !t.closest) return null;
   const d = t.closest('[data-tip]'); if (d) return NOTE[d.dataset.tip] || null;
   const k = t.closest('[data-tip-kind]'); if (k) return kindTip(k.dataset.tipKind);
   const sv = t.closest('[data-tip-sev]'); if (sv) return [SEV[sv.dataset.tipSev][0], SEV[sv.dataset.tipSev][1], ''];
-  const pill = t.closest('.pill'); if (pill) { const m = pill.className.match(/p-(\w+)/); if (m && STATUS[m[1]]) return ['Status: ' + STATUS[m[1]][0], STATUS[m[1]][1] + '.', '']; const s2 = pill.className.match(/sv-(\w+)/); if (s2) return [SEV[s2[1]][0], SEV[s2[1]][1], '']; }
-  const rl = t.closest('.rl, dt'); if (rl) { for (const [re, key] of REL_TIP) if (re.test(rl.textContent)) return NOTE[key]; }
+  const pill = t.closest('.pill'); if (pill) { const m = pill.className.match(/p-(\w+)/); if (m && STATUS[m[1]]) return [L('tip.status', { x: STATUS[m[1]][0] }), STATUS[m[1]][1] + '.', '']; const s2 = pill.className.match(/sv-(\w+)/); if (s2) return [SEV[s2[1]][0], SEV[s2[1]][1], '']; }
   const ck = t.closest('.card .ck > span:first-child'); if (ck) return kindTip(ck.textContent.trim());
   if (!t.closest('.dg')) return null;
   if (t.closest('.ambm')) return NOTE.amb;
   const port = t.closest('g.port');
-  if (port) { const el = elByEid(port.dataset.eid); if (!el) return NOTE['port-generic']; const dir = portDir(el); return ['Port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : ''), (dir ? 'Richtung: ' + DIR_PLAIN[dir] + '. ' : 'Richtung offen. ') + (el.types[0] && el.types[0].startsWith('~') ? 'Das ~ heißt konjugiert: Die Richtungen des Port-Typs sind umgedreht. ' : '') + 'Das Dreieck im Quadrat zeigt die Richtung.', 'port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : '') + ';']; }
+  if (port) { const el = elByEid(port.dataset.eid); if (!el) return NOTE['port-generic']; const dir = portDir(el); return ['Port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : ''), (dir ? L('tip.portDir', { d: DIR_PLAIN[dir] }) : L('tip.portDirOpen')) + ' ' + (el.types[0] && el.types[0].startsWith('~') ? L('tip.portConj') + ' ' : '') + L('tip.portTriangle'), 'port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : '') + ';']; }
   const cls = (t.getAttribute && t.getAttribute('class')) || '';
   let m = cls.match(/\be-(\w+)/) || cls.match(/\bel-(\w+)/); if (m && NOTE['e-' + m[1]]) return NOTE['e-' + m[1]];
-  if (/\bst\b/.test(cls)) { const kw = t.textContent.replace(/[«»]/g, '').trim(); return kindTip(kw) || (kw === 'Datei' ? NOTE.file : null); }
+  if (/\bst\b/.test(cls)) { const kw = t.textContent.replace(/[«»]/g, '').trim(); return kindTip(kw) || (kw === L('struct.fileStereo') ? NOTE.file : null); }
   if (/\bct\b/.test(cls) && !/\bdc\b/.test(cls)) return NOTE['c-' + t.textContent.trim()] || null;
   if (/\bln\b/.test(cls)) { const s = t.textContent.trim(); return s.startsWith('^') ? NOTE.inherited : s.includes(':>>') ? NOTE.redef : NOTE.feature; }
   const nd = t.closest('g.nd'); if (!nd) return null;
