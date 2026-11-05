@@ -809,7 +809,7 @@ function renderSVG(model, g) {
     const n = byId.get(gn.id); if (!n) return;
     const x = ox + gn.x, y = oy + gn.y, w = gn.width, h = gn.height; absPos[gn.id] = [x, y];
     const amb = n.el && n.el.isDef && n.el.name && (IDX.defs.get(n.el.name) || []).length > 1;
-    const attrs = `class="nd ${n.cls || ''}${n.collapsed ? ' collapsed' : ''}${amb ? ' amb' : ''}" data-id="${n.id}"${n.el ? ` data-eid="${n.el.eid}"` : ''}`;
+    const attrs = `class="nd ${n.cls || ''}${n.collapsed ? ' collapsed' : ''}${amb ? ' amb' : ''}" data-id="${n.id}" data-shape="${n.shape}"${n.pseudo ? ` data-pseudo="${n.pseudo}"` : ''}${n.rounded ? ' data-usage="1"' : ''}${n.el ? ` data-eid="${n.el.eid}"` : ''}`;
     if (n.shape === 'circle') { out.push(`<g ${attrs}><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 1}" class="ps-fill"/></g>`); }
     else if (n.shape === 'bullseye') { out.push(`<g ${attrs}><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 1}" class="ps-ring"/><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 6}" class="ps-fill"/></g>`); }
     else if (n.shape === 'diamond') { out.push(`<g ${attrs}><path d="M${x + w / 2},${y} L${x + w},${y + h / 2} L${x + w / 2},${y + h} L${x},${y + h / 2} Z" class="nb"/>${n.el && !n.el.anon ? `<text x="${x + w / 2}" y="${y - 5}" text-anchor="middle" class="st">${esc(n.el.name)}</text>` : ''}</g>`); }
@@ -917,9 +917,10 @@ function resolveChain(chain, ctx) {
   for (const s of dot.slice(1)) { const nx = features(cur).find(f => f.name === s); if (!nx) break; path.push(nx); cur = nx; }
   return { el: cur, path };
 }
-let TR = { edges: [], out: new Map(), inn: new Map() };
+let TR = { edges: [], out: new Map(), inn: new Map(), broken: [], links: [] };
 function buildTrace() {
-  const edges = [], out = new Map(), inn = new Map();
+  const edges = [], out = new Map(), inn = new Map(), broken = [], links = [];
+  const miss = (r, holder, which, chain) => broken.push({ type: r.type, which, chain, line: r.line, file: r.file || holder.file, holder });
   const push = (m, k, e) => { if (!m.has(k)) m.set(k, []); m.get(k).push(e); };
   const add = (a, b, type, x) => {
     if (!a || !b || a === b) return;
@@ -943,26 +944,28 @@ function buildTrace() {
   }
   for (const holder of [IDX.root, ...IDX.all]) for (const r of holder.rels) {
     const info = { line: r.line, file: r.file || holder.file };
-    if (r.type === 'satisfy') { const a = r.srcEl ? { el: r.srcEl } : resolveChain(r.src, holder); const b = resolveChain(r.tgt, holder); if (a && b) add(a.el, b.el, 'satisfy', info); }
-    else if (r.type === 'verify') { const b = resolveChain(r.tgt, holder); if (b) add(testOwner(r.srcEl || holder), b.el, 'verify', info); }
-    else if (r.type === 'allocate') { const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (a && b) add(a.el, b.el, 'allocate', info); }
+    if (r.type === 'satisfy') { const a = r.srcEl ? { el: r.srcEl } : resolveChain(r.src, holder); const b = resolveChain(r.tgt, holder); if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (a && b) add(a.el, b.el, 'satisfy', info); }
+    else if (r.type === 'verify') { const b = resolveChain(r.tgt, holder); if (b) add(testOwner(r.srcEl || holder), b.el, 'verify', info); else miss(r, holder, 'tgt', r.tgt); }
+    else if (r.type === 'allocate') { const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (a && b) add(a.el, b.el, 'allocate', info); }
     else if (r.type === 'dependency') {
       const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a || !b) continue;
       const m = r.meta || [];
       if (m.includes('derivation')) add(b.el, a.el, 'derive', info); else if (m.includes('refinement')) add(a.el, b.el, 'refine', info); else add(a.el, b.el, 'depend', info);
     }
     else if (['connect', 'interface', 'flow', 'bind'].includes(r.type)) {
-      const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a || !b) continue;
+      const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder);
+      if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (!a || !b) continue;
       const portOf = p => { const ps = p.path.filter(x => x.kind === 'port'); return ps.length ? ps[ps.length - 1] : p.el; };
       const pa = portOf(a), pb = portOf(b), ua = a.path[0], ub = b.path[0];
       const t = r.type === 'flow' ? 'flow' : r.type === 'bind' ? 'bind' : 'connect';
       const lab = r.label || (r.el && r.el.types[0] ? shortT(r.el.types[0]) : '');
       add(pa, pb, t, Object.assign({ label: lab }, info));
+      links.push({ type: t, pa, pb, ua, ub, deleg: (a.path.length === 1) !== (b.path.length === 1), label: lab, holder, line: r.line, file: info.file });
       if (ua !== pa || ub !== pb) if (ua !== ub) add(ua, ub, t, Object.assign({ label: lab, via: (pa.name || '') + ' → ' + (pb.name || '') }, info));
       if (r.el) { add(r.el, pa, 'end', info); add(r.el, pb, 'end', info); }
     }
   }
-  TR = { edges, out, inn };
+  TR = { edges, out, inn, broken, links };
   return TR;
 }
 const trOut = (x, t) => (TR.out.get(x) || []).filter(e => !t || e.type === t).map(e => e.b);
@@ -1085,4 +1088,184 @@ function coverage() {
   return rows;
 }
 
-if (typeof module !== 'undefined') module.exports = { buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
+
+/* ================= Klartext: Steckbrief eines Elements ================= */
+const KIND_PLAIN = {
+  'part def': 'ein Bauplan für Komponenten (part def)', 'part': 'eine konkrete Komponente (part)',
+  'item def': 'eine Art von Ding, das fließt oder ausgetauscht wird (item def)', 'item': 'ein Ding, das fließt oder ausgetauscht wird (item)',
+  'port def': 'eine Schnittstellenart (port def)', 'port': 'ein Anschluss (port)',
+  'interface def': 'eine Verbindungsart zwischen zwei Ports (interface def)', 'interface': 'eine konkrete Verbindung zwischen zwei Ports (interface)',
+  'connection def': 'eine Verbindungsart (connection def)', 'connection': 'eine konkrete Verbindung (connection)',
+  'attribute def': 'eine Eigenschaftsart, z. B. eine physikalische Größe (attribute def)', 'attribute': 'eine Eigenschaft mit Wert (attribute)',
+  'enum def': 'eine Aufzählung fester Werte (enum def)',
+  'requirement def': 'eine Anforderungsvorlage (requirement def)', 'requirement': 'eine konkrete Anforderung (requirement)',
+  'concern def': 'ein Anliegen eines Stakeholders (concern def)', 'concern': 'ein Anliegen (concern)',
+  'verification def': 'ein Testverfahren (verification def)', 'verification': 'ein konkreter Test (verification)',
+  'analysis def': 'eine Analyse (analysis def)', 'analysis': 'eine Analyse (analysis)',
+  'use case def': 'ein Anwendungsfall (use case def)', 'use case': 'ein Anwendungsfall (use case)',
+  'action def': 'ein Ablauf (action def)', 'action': 'ein Ablaufschritt (action)',
+  'state def': 'eine Zustandsmaschine (state def)', 'state': 'ein Zustand (state)',
+  'calc def': 'eine Berechnung (calc def)', 'calc': 'eine Berechnung (calc)',
+  'constraint def': 'eine Bedingung (constraint def)', 'constraint': 'eine Bedingung (constraint)',
+  'occurrence def': 'etwas, das zeitlich existiert (occurrence def)', 'allocation def': 'eine Zuordnungsart (allocation def)',
+  'flow': 'ein Fluss (flow)', 'package': 'ein Paket, das Elemente gruppiert (package)',
+};
+const plainKind = el => KIND_PLAIN[kindLabel(el)] || (kindLabel(el) ? '„' + kindLabel(el) + '“' : 'ein Merkmal');
+const DIR_PLAIN = { in: 'nimmt auf (in)', out: 'gibt aus (out)', inout: 'tauscht in beide Richtungen (inout)' };
+const uniq = l => [...new Set(l.filter(Boolean))];
+function listSeg(els, fmt) { const out = []; els.forEach((e, i) => { if (i) out.push(', '); out.push({ el: e }); if (fmt) { const x = fmt(e); if (x) out.push(' ' + x); } }); return out; }
+function partnersOf(el) {
+  // Verbundene Komponenten: über Usages (akku ↔ rechner) und über Ports
+  const group = el.isDef ? [el, ...trIn(el, 'typed')] : [el, ...trOut(el, 'typed')];
+  const res = new Map();
+  for (const g of group) for (const e of [...(TR.out.get(g) || []), ...(TR.inn.get(g) || [])]) {
+    if (!['connect', 'flow', 'bind'].includes(e.type)) continue;
+    const o = e.a === g ? e.b : e.a; if (stageOf(o) !== 'struct' || group.includes(o)) continue;
+    if (!res.has(o)) res.set(o, uniq([e.label, e.via].filter(Boolean).map(String)));
+  }
+  return res;
+}
+function satisfiesOf(el) {
+  const group = el.isDef ? [el, ...trIn(el, 'typed')] : [el, ...trOut(el, 'typed')];
+  return uniq(group.flatMap(g => trOut(g, 'satisfy')));
+}
+function describe(el, impactDepth) {
+  const rows = []; const R = (k, v, gap) => { if (v && v.length) rows.push({ k, v, gap: !!gap }); };
+  const st = stageOf(el);
+  const def = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null;
+  const owner = el.parent && el.parent.name && !['package', 'root'].includes(el.parent.kind) ? el.parent : null;
+  const lead = [el.name && !el.anon ? el.name : dispName(el), ' ist ' + plainKind(el)];
+  if (def) lead.push(' vom Typ ', { el: def });
+  if (owner) lead.push(el.kind === 'port' ? ' an ' : ' in ', { el: owner });
+  const id = el.short || (def && def.short); if (id) lead.push(' – ID ' + id);
+  lead.push('.');
+  const doc = el.doc || (def && def.doc); if (doc) R('Text', ['„' + doc + '“']);
+  const supers = el.isDef ? superDefs(el) : [];
+  if (supers.length) { const inh = supers.flatMap(d => features(d).map(f => f.name)).filter(Boolean); R('Erbt von', [...listSeg(supers), inh.length ? ' – übernimmt ' + uniq(inh).slice(0, 6).join(', ') : '']); }
+  const subs = el.isDef ? trIn(el, 'spec') : []; if (subs.length) R('Spezialisiert durch', listSeg(subs));
+
+  if (st === 'struct' || el.kind === 'item') {
+    const parts = partsOf(el); if (parts.length) R('Besteht aus', listSeg(parts, p => p.types[0] ? '(' + shortT(p.types[0]) + (p.mult ? ' ×' + p.mult : '') + ')' : ''));
+    if (el.isDef) { const users = trIn(el, 'typed').filter(u => u.parent && u.parent.name); if (users.length) R('Verwendet in', listSeg(users.map(u => u.parent).filter((v, i, a) => a.indexOf(v) === i), o => { const u = users.find(x => x.parent === o); return 'als ' + u.name; })); else R('Verwendet in', ['noch nirgends – keine Usage dieser Definition'], true); }
+    const ports = portsOf(el); if (ports.length) R('Anschlüsse', listSeg(ports, p => { const d = portDir(p); return '– ' + (d ? DIR_PLAIN[d] : 'Richtung offen'); }));
+    const pt = partnersOf(el); if (pt.size) R('Verbunden mit', listSeg([...pt.keys()], o => pt.get(o).length ? '(' + pt.get(o).join(', ') + ')' : ''));
+    const beh = features(el).filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed);
+    if (beh.length) R('Verhalten', listSeg(beh, b => b.performed === 'perform' ? '(führt aus)' : '(zeigt)'));
+    const allocIn = el.isDef ? [] : trIn(el, 'allocate'); if (allocIn.length) R('Darauf läuft', listSeg(allocIn));
+    const sat = satisfiesOf(el);
+    if (sat.length) R('Erfüllt', listSeg(sat, r => idOf_(r) ? '[' + idOf_(r) + ']' : ''));
+    else { let anc = null; for (let p = el.parent; p && !anc; p = p.parent) if (satisfiesOf(p).length) anc = p; R('Erfüllt', anc ? ['nichts direkt – gehört zu ', { el: anc }, ', das Anforderungen erfüllt'] : ['keine Anforderung – wozu gibt es diese Komponente?'], !anc); }
+    const tests = uniq([...sat.flatMap(r => trIn(r, 'verify')), ...(el.isDef ? trIn(el, 'subject') : (def ? trIn(def, 'subject') : []))]);
+    if (tests.length) R('Geprüft durch', listSeg(tests)); else if (sat.length) R('Geprüft durch', ['kein Test – die erfüllten Anforderungen sind ungeprüft'], true);
+  }
+  if (st === 'iface') {
+    if (el.kind === 'port') {
+      const d = portDir(el); if (!el.isDef) R('Richtung', [d ? DIR_PLAIN[d] : 'offen', el.types[0] && el.types[0].startsWith('~') ? ' – konjugiert (~): die Richtungen des Port-Typs sind umgedreht' : '']);
+      const pd = el.isDef ? el : def; const carried = pd ? features(pd).filter(f => f.dir || f.kind === 'attribute' || f.kind === 'item') : [];
+      if (carried.length) R('Überträgt', [carried.map(featLine).join(', ')]);
+      const conn = [...(TR.out.get(el) || []), ...(TR.inn.get(el) || [])].filter(e => ['connect', 'flow', 'bind'].includes(e.type));
+      if (conn.length) R('Verbunden mit', listSeg(conn.map(e => e.a === el ? e.b : e.a), o => { const e = conn.find(x => x.a === o || x.b === o); return e.label ? '(' + e.label + ')' : ''; }));
+      else if (!el.isDef) R('Verbunden mit', ['nichts – offener Anschluss'], true);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet von', listSeg(users)); }
+    } else {
+      if (el.ends && el.ends.length) R('Verbindet', [el.ends.join(' ↔ ')]);
+      const ends = el.children.filter(c => c.role === 'end'); if (ends.length) R('Enden', [ends.map(featLine).join(', ')]);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet in', listSeg(users)); }
+    }
+  }
+  if (st === 'req') {
+    const subj = (el.isDef ? el : def || el).children.filter(c => c.role === 'subject'); if (subj.length) R('Gegenstand', [subj.map(featLine).join(', ')]);
+    const cons = el.constraints || (def && def.constraints); if (cons) R('Bedingung', [cons.join('; ')]);
+    const up = el.parent && el.parent.kind === 'requirement' ? el.parent : null; if (up) R('Teil von', [{ el: up }]);
+    const kids = trOut(el, 'owns').filter(c => c.kind === 'requirement'); if (kids.length) R('Enthält', listSeg(kids));
+    const from = trIn(el, 'derive'), to = trOut(el, 'derive'); if (from.length) R('Abgeleitet aus', listSeg(from)); if (to.length) R('Abgeleitet zu', listSeg(to));
+    const ref = [...trOut(el, 'refine'), ...trIn(el, 'refine')]; if (ref.length) R('Verfeinerung', listSeg(ref));
+    if (!kids.length) {
+      const row = coverage().find(r => r.el === el);
+      const sat = row ? row.sat : uniq(trIn(el, 'satisfy')), ver = row ? row.ver : uniq(trIn(el, 'verify'));
+      R('Umgesetzt durch', sat.length ? listSeg(sat) : ['niemand – es fehlt ein satisfy'], !sat.length);
+      R('Verifiziert durch', ver.length ? listSeg(ver) : ['kein Test – es fehlt ein verify'], !ver.length);
+    }
+  }
+  if (st === 'test') {
+    const ver = trOut(el, 'verify'); R('Prüft', ver.length ? listSeg(ver) : ['keine Anforderung – das objective enthält kein verify'], !ver.length);
+    const subj = trOut(el, 'subject'); if (subj.length) R('Prüfling', listSeg(subj));
+    const impl = uniq(ver.flatMap(r => trIn(r, 'satisfy'))); if (impl.length) R('Betrifft Umsetzung', listSeg(impl));
+  }
+  if (st === 'behav') {
+    const kids = features(el).filter(c => !c.isDef && (BEHAV.has(c.kind)) && !c.anon && c.kind !== 'accept');
+    if (kids.length) R(el.kind === 'state' ? 'Zustände' : 'Schritte', listSeg(kids));
+    const params = features(el).filter(f => f.dir && !BEHAV.has(f.kind)); if (params.length) R('Ein-/Ausgänge', [params.map(featLine).join(', ')]);
+    if (el.kind === 'state' && el.parent) {
+      const tr = relsOf(el.parent).filter(r => (r.type === 'transition' || r.type === 'succession') && lastSeg(r.src) === el.name);
+      if (tr.length) R('Übergänge', [tr.map(r => (r.trigger ? 'bei ' + r.trigger : 'danach') + (r.guard ? ' [' + r.guard + ']' : '') + ' → ' + (lastSeg(r.tgt) === 'done' ? 'Ende' : lastSeg(r.tgt))).join('; ')]);
+    }
+    const users = el.isDef ? trIn(el, 'typed').filter(u => u.performed && u.parent) : (el.performed && el.parent ? [el] : []);
+    if (users.length) R(el.kind === 'state' ? 'Gezeigt von' : 'Ausgeführt von', listSeg(users.map(u => u.parent)));
+    const alloc = trOut(el, 'allocate'); if (alloc.length) R('Alloziert auf', listSeg(alloc));
+  }
+  if (st) {
+    const imp = impactOf(el, impactDepth || 2);
+    const n = k => imp.filter(x => stageOf(x.el) === k).length;
+    const parts = [imp.length + ' Element' + (imp.length === 1 ? '' : 'e')]; if (n('req')) parts.push(n('req') + ' Anforderung' + (n('req') > 1 ? 'en' : '')); if (n('test')) parts.push(n('test') + ' Test' + (n('test') > 1 ? 's' : ''));
+    if (!imp.length) R('Bei Änderung', ['betrifft nichts weiter im Modell']); else R('Bei Änderung', ['betrifft ' + parts[0] + (parts.length > 1 ? ', darunter ' + parts.slice(1).join(' und ') : ''), { go: 'impact', label: 'ansehen' }]);
+  }
+  R('Ort', [{ src: true, label: (el.file ? el.file + ', ' : '') + 'Zeile ' + el.line }]);
+  return { lead, rows };
+}
+function idOf_(el) { if (el.short) return el.short; const d = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null; return d && d.short || ''; }
+
+/* ================= Modell-Check ================= */
+const RULES = {
+  parse: { sev: 'error', title: 'Nicht verstandene Stellen im Quelltext', why: 'Der Parser hat hier etwas übersprungen. Oft ist es ein Tippfehler oder eine fehlende Klammer – dann fehlen Teile des Modells in allen Sichten.' },
+  broken: { sev: 'error', title: 'Verweis ins Leere', why: 'Eine Beziehung zeigt auf einen Namen, den es im Modell nicht gibt. Die Beziehung wirkt dann nicht – meist ein Tippfehler oder ein fehlender Import.' },
+  type: { sev: 'error', title: 'Unbekannter Typ', why: 'Der Typ hinter dem Doppelpunkt ist nirgends definiert. Ohne Definition weiß das Modell nicht, was dieses Element ist.' },
+  direction: { sev: 'error', title: 'Port-Richtungen passen nicht zusammen', why: 'Verbundene Ports sollten zueinander passen: was einer ausgibt (out), muss der andere aufnehmen (in). Zwei Ausgänge gegeneinander sind ein Kurzschluss im Modell. Lösung ist oft ein konjugierter Port (~).' },
+  unsat: { sev: 'gap', title: 'Anforderung ohne Umsetzung', why: 'Keine Komponente erfüllt diese Anforderung. Sie ist ein Versprechen ohne Umsetzung.' },
+  unver: { sev: 'gap', title: 'Anforderung ohne Test', why: 'Kein Test verifiziert diese Anforderung. Ob das System sie erfüllt, bleibt unbewiesen.' },
+  emptytest: { sev: 'gap', title: 'Test ohne Anforderung', why: 'Ein Test, der keine Anforderung verifiziert, prüft etwas, das niemand gefordert hat – oder das verify fehlt.' },
+  ambig: { sev: 'hint', title: 'Name mehrfach definiert', why: 'Gleichnamige Definitionen in verschiedenen Paketen sind erlaubt, machen unqualifizierte Verweise aber mehrdeutig. Eindeutig wird es mit Paket::Name.' },
+  openport: { sev: 'hint', title: 'Offener Anschluss', why: 'Die Komponente wird in einer Baugruppe verwendet, aber dieser Port ist nirgends verbunden. Entweder fehlt eine Verbindung, oder der Port ist überflüssig.' },
+  noreq: { sev: 'hint', title: 'Komponente ohne Anforderung', why: 'Weder die Komponente noch eine Baugruppe, zu der sie gehört, erfüllt eine Anforderung. Jede Komponente sollte sich auf eine Anforderung zurückführen lassen – sonst stellt sich die Frage, wozu sie da ist.' },
+  unused: { sev: 'hint', title: 'Definition ohne Verwendung', why: 'Diese Definition wird nirgends verwendet: keine Usage, keine Spezialisierung. Vielleicht ein Überbleibsel oder ein noch nicht eingebauter Baustein.' },
+};
+const LIB_TYPE = /^(ScalarValues|ISQ\w*|SI\w*|USCustomaryUnits|Quantities|MeasurementReferences|Items|Parts|Ports|Actions|States|Requirements|Base|Links|Occurrences|Objects|Performances|Collections|VectorValues|NumericalFunctions|TrigFunctions|Time|Metaobjects|KerML|SysML|RequirementDerivation)::/;
+const LIB_SIMPLE = new Set(['Real', 'Integer', 'Natural', 'Positive', 'Rational', 'Complex', 'Boolean', 'String', 'Number', 'NumericalValue', 'ScalarValue', 'Anything', 'Item', 'Part', 'Port', 'Action', 'State', 'Requirement', 'Occurrence', 'Interface', 'Connection', 'Flow', 'Time', 'TimeInstantValue', 'DurationValue']);
+const isLibType = t => { const n = t.replace(/^~/, ''); return LIB_TYPE.test(n) || LIB_SIMPLE.has(lastSeg(n)) || /Value$/.test(lastSeg(n)); };
+function modelChecks(warns) {
+  const items = []; const I = (rule, el, msg, fix, extra) => items.push(Object.assign({ rule, sev: RULES[rule].sev, el, msg, fix, line: el ? el.line : null, file: el ? el.file : null }, extra || {}));
+  for (const w of warns || []) I('parse', null, w.msg, 'Zeile prüfen: fehlt ein ; oder eine }?', { line: w.line, file: w.file });
+  for (const b of TR.broken || []) I('broken', b.holder && b.holder.kind !== 'root' ? b.holder : null, `${b.type}: „${b.chain}“ wurde nicht gefunden`, 'Namen prüfen oder mit Paket qualifizieren, z. B. Paket::' + lastSeg(b.chain), { line: b.line, file: b.file });
+  for (const el of IDX.all) for (const t of el.types) if (!resolveDef(t, el) && !isLibType(t) && !(IDX.byName.get(lastSeg(t)) || []).length) I('type', el, `${dispName(el)}: Typ „${t}“ ist nicht definiert`, `${el.kind === 'feature' ? 'part' : el.kind} def ${lastSeg(t)} { … }  // oder Import ergänzen`);
+  for (const l of TR.links || []) {
+    if (l.deleg || l.type === 'bind') continue;
+    const da = l.pa.kind === 'port' ? portDir(l.pa) : null, db = l.pb.kind === 'port' ? portDir(l.pb) : null;
+    if (da && db && da === db && da !== 'inout') I('direction', l.pa, `${dispName(l.pa)} und ${dispName(l.pb)} sind beide „${da}“`, `einen der beiden Ports konjugieren: port ${l.pb.name} : ~${l.pb.types[0] ? shortT(l.pb.types[0]).replace(/^~/, '') : 'PortTyp'};`, { line: l.line, file: l.file });
+    else if (l.type === 'flow' && (da === 'in' || db === 'out')) I('direction', l.pa, `Fluss läuft von ${dispName(l.pa)} (${da || '?'}) nach ${dispName(l.pb)} (${db || '?'}) – gegen die Port-Richtung`, 'Quelle und Ziel des flow tauschen oder Port-Richtungen prüfen', { line: l.line, file: l.file });
+  }
+  for (const r of coverage()) {
+    if (r.status === 'group') continue;
+    if (!r.sat.length) I('unsat', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `satisfy ${r.el.name} by <komponente>;`);
+    if (!r.ver.length) I('unver', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `verification def ${r.el.name[0].toUpperCase() + r.el.name.slice(1)}Test { objective { verify ${r.el.name}; } }`);
+  }
+  for (const t of IDX.all.filter(e => stageOf(e) === 'test' && e.isDef)) if (!trOut(t, 'verify').length) I('emptytest', t, t.name, 'objective { verify <anforderung>; }');
+  for (const a of IDX.ambig) I('ambig', a.defs[0], `„${a.name}“: ${a.defs.map(d => d.qn).join(', ')}`, `Verweise qualifizieren, z. B. : ${a.defs[0].qn}`, { ambig: a.name });
+  // offene Anschlüsse
+  const connected = new Set(); for (const e of TR.edges) if (['connect', 'flow', 'bind', 'end'].includes(e.type)) { connected.add(e.a); connected.add(e.b); }
+  for (const p of IDX.all.filter(e => e.kind === 'port' && !e.isDef && e.parent && stageOf(e.parent) === 'struct')) {
+    const o = p.parent; const used = o.isDef ? trIn(o, 'typed').some(u => u.parent && stageOf(u.parent) === 'struct') : stageOf(o.parent) === 'struct';
+    if (used && !connected.has(p)) I('openport', p, `${o.name}.${p.name} ist nicht verbunden`, `connect <teil>.${p.name} to <anderesTeil>.<port>;`);
+  }
+  // Komponenten ohne Anforderungsbezug
+  const covered = new Set(); const mark = el => { if (!el || covered.has(el)) return; covered.add(el); for (const s of el.isDef ? superDefs(el) : []) mark(s); for (const p of partsOf(el)) mark(p); for (const t of el.isDef ? trIn(el, 'typed') : trOut(el, 'typed')) if (!covered.has(t)) { covered.add(t); for (const p of partsOf(t)) mark(p); if (t.isDef) superDefs(t).forEach(mark); } };
+  for (const e of TR.edges) if (e.type === 'satisfy') mark(e.a);
+  if (covered.size) for (const el of IDX.all.filter(e => e.kind === 'part' && e.name && (e.isDef || stageOf(e.parent) === 'struct'))) if (!covered.has(el) && !(el.isDef && trIn(el, 'typed').length)) I('noreq', el, dispName(el), `satisfy <anforderung> by ${el.isDef ? '<usage von ' + el.name + '>' : el.name};`);
+  // unbenutzte Definitionen
+  for (const d of IDX.all.filter(e => e.isDef && e.name && ['part', 'port', 'item', 'interface', 'connection', 'action', 'state', 'requirement'].includes(e.kind))) {
+    const usedBy = (TR.inn.get(d) || []).some(e => ['typed', 'spec', 'subject', 'satisfy', 'verify', 'allocate'].includes(e.type)) || (TR.out.get(d) || []).some(e => e.type === 'allocate');
+    const referenced = IDX.all.some(e => e !== d && (e.types.concat(e.specs).some(t => lastSeg(t) === d.name)));
+    if (!usedBy && !referenced) I('unused', d, `${kindLabel(d)} ${d.name}`, `part x : ${d.name};  // verwenden – oder Definition entfernen`);
+  }
+  return items;
+}
+if (typeof module !== 'undefined') module.exports = { describe, modelChecks, RULES, KIND_PLAIN, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };

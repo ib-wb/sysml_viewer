@@ -18,6 +18,15 @@ Begleitwerkzeug zum Lehrbuch *SysML v2, MBSE und ROS2 für Einsteiger* (Wolfgang
 | Rückverfolgung | Fokus-Element mit Spalten Anforderungen · Struktur · Schnittstellen · Verhalten · Nachweis; Klick verschiebt den Fokus, „Dein Weg“ führt zurück |
 | Auswirkung | Was ist bei einer Änderung betroffen – mit Reichweite, Begründung und Weg je Element |
 
+**Lernhilfen**
+
+| Funktion | Was sie tut |
+|---|---|
+| Fokus | Ein Element bleibt über Navigator, Diagramme, Detailansicht und Modellbaum hinweg ausgewählt; Diagramme wählen automatisch einen Kontext, in dem es vorkommt, und heben es hervor |
+| Steckbrief | Beschreibt das Fokus-Element in Klartext: was es ist, woraus es besteht, womit es verbunden ist, welche Anforderung es erfüllt, welcher Test es prüft, was eine Änderung betrifft – Lücken rot |
+| Modell-Check | Fehler (tote Verweise, unbekannte Typen, unpassende Port-Richtungen), Lücken (Anforderung ohne Umsetzung oder Test, Test ohne Anforderung) und Hinweise (offene Ports, Komponenten ohne Anforderung, unbenutzte Definitionen) – jeweils mit Begründung, Sprung und Code-Vorschlag |
+| Notation erklären | Beim Überfahren mit der Maus erklärt der Viewer Linien, Pfeilspitzen, Ports, eckige und runde Kästen, `^`, `:>>`, Stereotypen und Beziehungen – mit SysML-Beispiel; abschaltbar |
+
 **Diagramme**: Übersicht nach Dateien gruppiert, Verbindungen (IBD mit Ports), Zustände, Aktionen, Anforderungen; Klick auf einen Part öffnet ein Detaildiagramm (Vererbung, Verwendung, erfüllte Anforderungen, innere Struktur). Namenskollisionen über Dateigrenzen werden gemeldet und lassen sich per Auswahl auflösen. Export als SVG oder PNG.
 
 ## Benutzen
@@ -64,13 +73,15 @@ src/                 Quellen des Viewers
   core.js            Tokenizer, Parser, Modellindex, Diagramm-Sichten, Layout/Render, Trace-Graph
   app.js             Oberfläche, Dateien, Diagramm-Modus, VS-Code-Anbindung
   nav.js             Navigator: Abdeckung, Rückverfolgung, Auswirkung
+  learn.js           Lernhilfen: gemeinsamer Fokus, Steckbrief, Modell-Check, Notationserklärungen
   page.html          Seitengerüst und Styles
   diag.css           Styles der Diagramme (auch für SVG-Export)
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
 beispiel/            Beispielprojekt Indoorroboter (5 Dateien)
-tests/               Parser-/Traceability-Tests und Test der Erweiterung gegen ein VS-Code-Mock
+tests/               Parser-, Traceability-, Steckbrief- und Check-Tests; Test der Erweiterung gegen ein VS-Code-Mock
+  fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
 ```
 
 ## Entwickeln

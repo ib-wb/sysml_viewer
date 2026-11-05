@@ -55,7 +55,8 @@ const LEG = {
 const legendHTML = (model) => {
   const used = new Set(model.edges.map(e => e.cls));
   (function w(ns) { for (const n of ns) { if (n.ports.length) used.add('port'); if (n.pseudo) used.add(n.pseudo); if (n.el && n.el.isDef && (IDX.defs.get(n.el.name) || []).length > 1) used.add('amb'); w(n.children); } })(model.roots);
-  return [...(model.legend || []), 'amb'].filter(k => used.has(k) && LEG[k]).map(k => `<span><svg class="dg" width="34" height="12" viewBox="0 0 34 12">${LEG[k][0]}</svg>${LEG[k][1]}</span>`).join('');
+  const TIPK = { comp: 'e-comp', spec: 'e-spec', typed: 'e-typed', defby: 'e-defby', conn: 'e-conn', iface: 'e-iface', flow: 'e-flow', port: 'port-generic', trans: 'e-trans', succ: 'e-succ', init: 'init', final: 'final', satisfy: 'e-satisfy', contain: 'e-contain', amb: 'amb' };
+  return [...(model.legend || []), 'amb'].filter(k => used.has(k) && LEG[k]).map(k => `<span data-tip="${TIPK[k] || ''}"><svg class="dg" width="34" height="12" viewBox="0 0 34 12">${LEG[k][0]}</svg>${LEG[k][1]}</span>`).join('');
 };
 
 /* ---------- Zeichenfläche mit Zoom & Verschieben ---------- */
@@ -115,6 +116,7 @@ function reparse() {
   $('stat').textContent = `${nf > 1 ? nf + ' Dateien · ' : ''}${IDX.all.length} Elemente, ${nRel} Beziehungen` + (parseRes.warns.length ? ` · ${parseRes.warns.length} Hinweis${parseRes.warns.length > 1 ? 'e' : ''}` : ' · keine Parser-Hinweise');
   $('nEl').textContent = IDX.all.length;
   try { buildTrace(); } catch (e) { console.error(e); }
+  checkCache = null;
   renderAmbig(); renderWarns(); renderFileSel(); renderTree(); renderTabs();
   if (S.mode === 'diag') update(); else renderNav();
   if (!$('detail').hidden) refreshDetail();
@@ -199,6 +201,8 @@ async function update(refit) {
   renderOpts();
   const cands = v.cands(); const sel = $('ctx');
   sel.innerHTML = cands.map(c => `<option value="${esc(c.key)}">${esc(c.label)}</option>`).join('');
+  const F = navFocus();
+  if (F && S.ctxFocus[S.view] !== keyOf(F)) { const k = ctxFor(S.view, F, cands); if (k != null) S.ctx[S.view] = k; S.ctxFocus[S.view] = keyOf(F); }
   let want = S.ctx[S.view]; if (!cands.some(c => c.key === want)) want = cands[0] ? cands[0].key : '';
   sel.value = want; sel.disabled = cands.length < 2;
   const cand = cands.find(c => c.key === want);
@@ -215,7 +219,7 @@ async function update(refit) {
   } catch (e) { console.error(e); $('busy').hidden = true; showEmpty('Layout fehlgeschlagen: ' + esc(e.message || String(e))); return; }
   $('busy').hidden = true; $('empty').hidden = true;
   MV.title = (cand.el ? cand.el.name : cand.file || S.project) + '_' + v.label;
-  if (S.sel) markSel($('vp'), S.sel);
+  markFocus($('vp'));
   if (refit) MV.fit(); else MV.apply();
 }
 function showEmpty(html) { $('vp').innerHTML = ''; MV.cur = null; $('busy').hidden = true; const e = $('empty'); e.innerHTML = `<div>${html}</div>`; e.hidden = false; }
@@ -227,9 +231,9 @@ function hitEl(t) { const g = t && t.closest && t.closest('[data-eid]'); return 
 function hitLine(t) { const p = t && t.closest && t.closest('[data-line]'); return p ? { line: +p.dataset.line, file: p.dataset.file } : null; }
 function pickMain(t) {
   const el = hitEl(t);
-  if (el) { S.sel = el; markSel($('vp'), el); showInfo(el); if (isOpenable(el)) openDetail(el, true); return; }
+  if (el) { setFocus(el, { here: true }); showInfo(el); if (isOpenable(el)) openDetail(el, true); return; }
   const l = hitLine(t); if (l) { showInfoLine(l); return; }
-  S.sel = null; markSel($('vp'), null); $('info').textContent = 'Part anklicken öffnet das Detaildiagramm · Mausrad zoomt · Ziehen verschiebt';
+  $('info').textContent = 'Klick setzt den Fokus, ein Part öffnet zusätzlich sein Detaildiagramm · Mausrad zoomt · Ziehen verschiebt';
 }
 function markSel(vp, el) { vp.querySelectorAll('.sel').forEach(n => n.classList.remove('sel')); if (el) vp.querySelectorAll(`[data-eid="${el.eid}"]`).forEach(n => n.classList.add('sel')); }
 function drillTargets(el) {
@@ -244,14 +248,9 @@ function drillTargets(el) {
 const fileLine = el => `${S.files.length > 1 && el.file ? el.file + ', ' : ''}Zeile ${el.line}`;
 function showInfo(el) {
   const info = $('info'); info.innerHTML = '';
-  const add = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; n.textContent = txt; info.appendChild(n); return n; };
-  add('span', 'kd', kindLabel(el) || el.kind); add('span', 'qn', el.qn || el.name || '');
-  if (el.types.length) add('span', '', 'Typ: ' + el.types.join(', '));
-  const b = add('button', 'linkbtn', fileLine(el)); b.type = 'button'; b.onclick = () => gotoLine(el.file, el.line);
-  if (isOpenable(el)) { const d = add('button', 'linkbtn', 'Detaildiagramm'); d.type = 'button'; d.onclick = () => openDetail(el, true); }
-  if (stageOf(el)) { const d = add('button', 'linkbtn', 'Im Navigator verfolgen'); d.type = 'button'; d.onclick = () => navGo(el, 'trace'); }
-  for (const [lab, view, ctxEl] of drillTargets(el)) { if (S.view === view) continue; const d = add('button', 'linkbtn', lab); d.type = 'button'; d.onclick = () => { S.view = view; S.ctx[view] = keyOf(ctxEl); renderTabs(); update(true); }; }
-  if (el.doc) add('span', 'doc', el.doc);
+  const k = document.createElement('span'); k.className = 'kd'; k.textContent = kindLabel(el) || el.kind; info.appendChild(k);
+  const q = document.createElement('span'); q.className = 'qn'; q.textContent = el.qn || el.name || ''; info.appendChild(q);
+  const h = document.createElement('span'); h.textContent = 'ist im Fokus – Steckbrief und weitere Wege in der Leiste oben'; info.appendChild(h);
 }
 function showInfoLine(l) { const info = $('info'); info.innerHTML = ''; const b = document.createElement('button'); b.className = 'linkbtn'; b.type = 'button'; b.textContent = `Beziehung im Quelltext zeigen (${S.files.length > 1 && l.file ? l.file + ', ' : ''}Zeile ${l.line})`; b.onclick = () => gotoLine(l.file, l.line); info.appendChild(b); }
 
@@ -289,7 +288,7 @@ async function renderDetail(el) {
   if (el.isDef && (IDX.defs.get(el.name) || []).length > 1) ambNames.add(el.name);
   for (const t of el.types.concat(el.specs)) if (!t.includes('::') && (IDX.defs.get(lastSeg(t)) || []).length > 1) ambNames.add(lastSeg(t));
   for (const n of ambNames) { const w = add('button', 'ambbtn', `„${n}“ ist mehrfach definiert – Auswahl prüfen`); w.type = 'button'; w.onclick = () => openAmbig(n); }
-  if (el.doc) add('span', 'doc', el.doc);
+  const db = document.createElement('details'); db.className = 'dbrief'; db.open = briefOpen; db.innerHTML = '<summary>Steckbrief</summary>' + briefHTML(el); db.addEventListener('click', e => { if (briefClick(e, x => isOpenable(x) ? openDetail(x, true) : (closeDetail(), navGo(x, 'trace')))) e.preventDefault(); }); meta.appendChild(db);
   // Diagramm
   let model; try { model = viewDetail(el); } catch (e) { console.error(e); $('dVp').innerHTML = ''; return; }
   $('dBusy').hidden = false;
@@ -307,7 +306,7 @@ async function renderDetail(el) {
 function pickDetail(t) {
   const el = hitEl(t); const cur = findByKey(S.dstack[S.dstack.length - 1]);
   if (el) {
-    markSel($('dVp'), el);
+    setFocus(el); markFocus($('dVp'));
     if (isOpenable(el) && el !== cur) { openDetail(el, true); return; }
     const s = $('dSel'); s.innerHTML = '';
     const k = document.createElement('span'); k.className = 'kd'; k.textContent = kindLabel(el) || el.kind; s.appendChild(k);
@@ -389,6 +388,7 @@ function renderTree() {
   } else tree.appendChild(build(IDX.root.children, 0));
 }
 function navigateTo(el) {
+  setFocus(el);
   const up = pred => { for (let e = el; e; e = e.parent) if (pred(e)) return e; return null; };
   const st = stateCandidates(), ac = actionCandidates();
   if (S.mode === 'nav' && stageOf(el)) { navGo(el, 'trace'); return; }

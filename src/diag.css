@@ -24,6 +24,7 @@
 .dg .mk-flow{fill:var(--flow)}
 .dg [data-eid]{cursor:pointer}
 .dg .sel .nb,.dg .sel .pt{stroke:var(--accent);stroke-width:2.6}
+.dg .rel>.nb{stroke:var(--accent);stroke-width:1.8;stroke-dasharray:5 3}
 .dg .amb .nb{stroke:var(--warn);stroke-width:2}
 .dg .ambm circle{fill:var(--warn)}.dg .ambm text{fill:var(--canvas);font-size:10px;font-weight:700}
 .dg .k-file .nb{fill:var(--canvas);fill-opacity:.55;stroke-dasharray:6 3}

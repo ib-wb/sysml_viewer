@@ -31,3 +31,27 @@ assert.strictEqual(typeOf(I2, 'motorLinks'), 'Struktur::Motor', 'automatisch: ei
 const I3 = C.buildIndex(C.parseFiles([...files, extra]).root, { Motor: 'Zukauf::Motor' }); C.buildTrace();
 assert.strictEqual(typeOf(I3, 'motorLinks'), 'Zukauf::Motor', 'Auswahl wird nicht beachtet');
 console.log('parser.test.js: alle Prüfungen bestanden');
+
+// ---------- Steckbrief ----------
+{
+  const { root } = C.parseFiles(files); const I4 = C.buildIndex(root, {}); C.buildTrace();
+  const txt = v => v.map(x => typeof x === 'string' ? x : x.el ? '[' + C.dispName(x.el) + ']' : '<' + x.label + '>').join('');
+  const rows = el => Object.fromEntries(C.describe(el).rows.map(r => [r.k, { t: txt(r.v), gap: r.gap }]));
+  const akku = rows(I4.all.find(e => e.name === 'akku'));
+  assert.ok(/rechner/.test(akku['Verbunden mit'].t) && /lidar/.test(akku['Verbunden mit'].t), 'Steckbrief akku: Partner fehlen');
+  assert.ok(/laufzeit/.test(akku['Erfüllt'].t) && /LaufzeitTest/.test(akku['Geprüft durch'].t), 'Steckbrief akku: Trace fehlt');
+  const notaus = rows(I4.all.find(e => e.name === 'notaus'));
+  assert.ok(notaus['Umgesetzt durch'].gap && notaus['Verifiziert durch'].gap, 'Steckbrief notaus: Lücken nicht markiert');
+  assert.ok(/^ausgang ist ein Anschluss/.test(txt(C.describe(I4.all.find(e => e.name === 'ausgang')).lead)), 'Steckbrief Port: Einleitung');
+}
+
+// ---------- Modell-Check ----------
+{
+  const chk = C.modelChecks(warns).map(c => c.rule).sort();
+  assert.deepStrictEqual(chk, ['unsat', 'unver', 'unver'], 'Beispielprojekt: nur die zwei bekannten Lücken');
+  const fx = fs.readFileSync(path.resolve(__dirname, 'fixtures/fehlerbeispiel.sysml'), 'utf8');
+  const r = C.parseFiles([{ name: 'fehlerbeispiel.sysml', text: fx }]); C.buildIndex(r.root, {}); C.buildTrace();
+  const got = new Set(C.modelChecks(r.warns).map(c => c.rule));
+  for (const rule of ['parse', 'broken', 'type', 'direction', 'unver', 'emptytest', 'openport', 'noreq', 'unused']) assert.ok(got.has(rule), 'Regel greift nicht: ' + rule);
+}
+console.log('parser.test.js: Steckbrief und Modell-Check bestanden');

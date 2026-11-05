@@ -28,7 +28,7 @@ def sample_files():
 
 def page():
     css = read(SRC, 'diag.css')
-    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js'))
+    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js') + '\n' + read(SRC, 'learn.js'))
     p = read(SRC, 'page.html')
     p = p.replace('/*DIAGCSS*/', css).replace('/*APP*/', app).replace('/*CORE*/', read(SRC, 'core.js'))
     p = p.replace('/*SAMPLE*/', json.dumps(sample_files(), ensure_ascii=False)).replace('/*DIAGCSS_STR*/', json.dumps(css.replace('\n', '')))

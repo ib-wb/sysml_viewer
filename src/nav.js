@@ -2,7 +2,7 @@
 /* ================= Navigator: Abdeckung, Rückverfolgung, Auswirkung ================= */
 const NAV = { tab: store.get('ntab') || 'cover', hist: [], idx: -1, depth: +(store.get('ndepth') || 2), gaps: false };
 try { const h = JSON.parse(store.get('nhist') || 'null'); if (h && Array.isArray(h.hist)) { NAV.hist = h.hist.slice(-30); NAV.idx = Math.min(h.idx, NAV.hist.length - 1); } } catch (e) {}
-const NTABS = [['cover', 'Abdeckung', 'Welche Anforderung ist umgesetzt und geprüft?'], ['trace', 'Rückverfolgung', 'Vom Fokus-Element zu allem, was daran hängt'], ['impact', 'Auswirkung', 'Was ist betroffen, wenn sich das Fokus-Element ändert?']];
+const NTABS = [['check', 'Modell-Check', 'Fehler, Lücken und Hinweise im Modell'], ['cover', 'Abdeckung', 'Welche Anforderung ist umgesetzt und geprüft?'], ['trace', 'Rückverfolgung', 'Vom Fokus-Element zu allem, was daran hängt'], ['impact', 'Auswirkung', 'Was ist betroffen, wenn sich das Fokus-Element ändert?']];
 const STATUS = { ok: ['vollständig', 'umgesetzt und verifiziert'], untested: ['ungeprüft', 'umgesetzt, aber kein Test'], unimpl: ['nicht umgesetzt', 'Test vorhanden, aber kein satisfy'], open: ['offen', 'weder umgesetzt noch geprüft'], group: ['Gruppe', 'fasst Unteranforderungen zusammen'] };
 const stIdx = id => STAGES.findIndex(s => s.id === id);
 
@@ -10,6 +10,7 @@ function setMode(m) {
   S.mode = m; store.set('mode', m);
   $('mNav').setAttribute('aria-selected', String(m === 'nav')); $('mDiag').setAttribute('aria-selected', String(m === 'diag'));
   $('navMode').hidden = m !== 'nav'; $('diagMode').hidden = m !== 'diag';
+  renderFocusBar();
   if (m === 'diag') { closeDetail(); requestAnimationFrame(() => update(true)); } else renderNav();
 }
 $('mNav').onclick = () => setMode('nav'); $('mDiag').onclick = () => setMode('diag');
@@ -20,7 +21,7 @@ function navGo(el, tab) {
   if (!el) return;
   const k = keyOf(el);
   if (NAV.hist[NAV.idx] !== k) { NAV.hist = NAV.hist.slice(0, NAV.idx + 1); NAV.hist.push(k); if (NAV.hist.length > 40) NAV.hist.shift(); NAV.idx = NAV.hist.length - 1; }
-  NAV.tab = tab || (NAV.tab === 'cover' ? 'trace' : NAV.tab);
+  NAV.tab = tab || (NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab);
   saveHist(); closeDetail();
   if (S.mode !== 'nav') setMode('nav'); else renderNav();
   $('nbody').scrollTop = 0;
@@ -47,17 +48,21 @@ $('nq').addEventListener('keydown', e => {
 });
 
 function renderNav() {
-  if (!IDXok || S.mode !== 'nav') return;
+  if (!IDXok) return;
+  renderFocusBar();
+  if (S.mode !== 'nav') return;
   const t = $('ntabs'); t.innerHTML = '';
   for (const [k, l, hint] of NTABS) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'vtab'; b.setAttribute('role', 'tab'); b.title = hint;
     b.setAttribute('aria-selected', String(NAV.tab === k)); b.textContent = l;
+    if (k === 'check') { const n = currentChecks().filter(i => i.sev !== 'hint').length; if (n) { const sp = document.createElement('span'); sp.className = 'n bad'; sp.textContent = n; b.appendChild(sp); } }
     b.onclick = () => { NAV.tab = k; saveHist(); renderNav(); }; t.appendChild(b);
   }
   $('nBack').disabled = NAV.idx <= 0; $('nFwd').disabled = NAV.idx >= NAV.hist.length - 1;
   renderTrail(); renderSearch();
   const body = $('nbody');
-  if (NAV.tab === 'cover') renderCover(body);
+  if (NAV.tab === 'check') renderCheck(body);
+  else if (NAV.tab === 'cover') renderCover(body);
   else if (NAV.tab === 'trace') renderTraceTab(body);
   else renderImpactTab(body);
 }
@@ -128,7 +133,6 @@ function card(el, o) {
     ${o.reason ? `<div class="why">${esc(o.reason)}</div>` : ''}
     ${short ? `<div class="cd">${esc(short)}</div>` : ''}
     ${o.path && o.path.length > 2 ? `<div class="cp">Weg: ${o.path.map(p => esc(p.name && !p.anon ? p.name : p.kind)).join(' › ')}</div>` : ''}
-    ${o.focus ? focusActions(el) : ''}
     ${ctx && !o.focus ? `<div class="cx">${esc(ctx)}</div>` : ''}
   </div>`;
 }
@@ -230,7 +234,7 @@ $('nbody').addEventListener('click', e => {
   const t = e.target.closest('[data-eid]'); if (!t) return;
   const el = elByEid(t.dataset.eid); if (!el) return;
   if (t.classList.contains('focus')) return;
-  navGo(el, NAV.tab === 'cover' ? 'trace' : NAV.tab === 'impact' ? 'trace' : NAV.tab);
+  navGo(el, 'trace');
 });
 $('nbody').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); e.target.click(); } });
 window.addEventListener('resize', () => drawLines(linePairs));

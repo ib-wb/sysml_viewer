@@ -2,7 +2,7 @@
   "name": "sysml-v2-viewer",
   "displayName": "SysML v2 Viewer",
   "description": "Navigator und Diagramme für SysML-v2-Textmodelle: Anforderungsabdeckung, Rückverfolgung, Auswirkungsanalyse, Struktur-, Verbindungs-, Zustands- und Aktionsdiagramme.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "ib-wb",
   "author": {
     "name": "Wolfgang Becker"

@@ -132,6 +132,52 @@ details.help code { font-family: var(--f-mono); font-size: 11.5px; color: var(--
 
 
 .pane.view { position: relative; }
+.tiptog { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tiptog input { accent-color: var(--accent); }
+.modebar, .focusbar, .brief, .nbar, .trail { flex-shrink: 0; }
+.focusbar { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--panel); font-size: 13px; min-height: 42px; }
+.fb-empty { color: var(--muted); font-size: 12.5px; }
+.fb-lab { font-family: var(--f-cond); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fb-el { display: inline-flex; align-items: baseline; gap: 8px; padding: 3px 10px; border-radius: 6px; border: 1.5px solid var(--accent); background: var(--raise); min-width: 0; }
+.fb-el.s-req { background: var(--n-req); } .fb-el.s-struct { background: var(--n-part); } .fb-el.s-iface { background: var(--n-port); } .fb-el.s-behav { background: var(--n-action); } .fb-el.s-test { background: var(--n-test); }
+.fb-k { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); }
+.fb-el b { font-weight: 600; word-break: break-word; }
+.fb-acts { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.fbb { border: 1px solid var(--line); background: var(--raise); border-radius: 5px; padding: 3px 9px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.fbb:hover { border-color: var(--accent); }
+.fbb.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.fbb[aria-expanded="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.brief { border-bottom: 1px solid var(--line); background: var(--raise); padding: 10px 14px 12px; max-height: 38vh; overflow: auto; font-size: 13px; line-height: 1.5; }
+.blead { margin: 0 0 8px; font-size: 14px; max-width: 90ch; }
+.brows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; margin: 0; }
+.brows > div { display: contents; }
+.brows dt { color: var(--muted); font-size: 12px; padding-top: 2px; white-space: nowrap; }
+.brows dd { margin: 0; min-width: 0; }
+.brows .bgap dt, .brows .bgap dd { color: var(--bad); }
+.brows .bgap dd { font-weight: 500; }
+.blink { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; margin: 1px 0; font-family: var(--f-mono); font-size: 11.5px; cursor: pointer; background: var(--raise); color: var(--ink); }
+.blink.s-req { background: var(--n-req); } .blink.s-struct { background: var(--n-part); } .blink.s-iface { background: var(--n-port); } .blink.s-behav { background: var(--n-action); } .blink.s-test { background: var(--n-test); }
+.blink:hover { border-color: var(--accent); }
+.bact { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0 2px; font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; }
+.dbrief { flex-basis: 100%; font-size: 12.5px; }
+.dbrief summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+.dbrief .brows, .dbrief .blead { margin-top: 6px; }
+.vtab .n.bad { background: var(--bad); color: var(--bg); border-radius: 99px; padding: 0 6px; opacity: 1; font-weight: 600; }
+.tile.sev-error b { color: var(--bad); } .tile.sev-gap b { color: var(--warn); } .tile.sev-hint b { color: var(--muted); }
+.chk-intro { margin: 0 0 10px; }
+details.chk { border: 1px solid var(--line); border-radius: 8px; background: var(--raise); margin-bottom: 10px; }
+details.chk summary { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; font-size: 13px; }
+details.chk .why { margin: 0 12px 6px; font-size: 12.5px; color: var(--muted); font-style: italic; max-width: 90ch; }
+details.chk ul { list-style: none; margin: 0; padding: 0 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+details.chk li { border-top: 1px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.chk-l { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.chk-fix { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.chk-fix code { font-family: var(--f-mono); font-size: 11.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; word-break: break-all; }
+.cp-btn { border: 1px solid var(--line); background: var(--raise); border-radius: 4px; font-size: 11px; padding: 1px 7px; cursor: pointer; }
+.pill.sv-error { background: var(--bad-soft); color: var(--bad); } .pill.sv-gap { background: var(--warn-soft); color: var(--warn); } .pill.sv-hint { background: var(--bg); color: var(--muted); }
+.tip { position: fixed; z-index: 70; max-width: 340px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 11px; font-size: 12.5px; line-height: 1.45; display: flex; flex-direction: column; gap: 4px; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.tip b { font-family: var(--f-cond); font-size: 13.5px; }
+.tip code { font-family: var(--f-mono); font-size: 11px; background: color-mix(in srgb, var(--bg) 14%, transparent); border-radius: 4px; padding: 2px 6px; white-space: pre-wrap; }
 .fbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
 .fbar select { flex: 1 1 auto; min-width: 0; height: 28px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); padding: 0 6px; font-family: var(--f-mono); font-size: 12px; }
 .ambig { display: flex; flex-direction: column; gap: 3px; background: var(--warn-soft); border-radius: 6px; padding: 6px 8px; }
@@ -273,6 +319,10 @@ body.nosrc .pane.src { display: none; }
   .sgrid { grid-template-columns: minmax(0, 1fr); min-width: 0; }
   .lines { display: none; }
   .modehint { display: none; }
+  .fb-acts { margin-left: 0; }
+  .brief { max-height: 45vh; }
+  .brows { grid-template-columns: minmax(0, 1fr); }
+  .brows dt { padding-top: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
@@ -302,6 +352,7 @@ body.nosrc .pane.src { display: none; }
 .dg .mk-flow{fill:var(--flow)}
 .dg [data-eid]{cursor:pointer}
 .dg .sel .nb,.dg .sel .pt{stroke:var(--accent);stroke-width:2.6}
+.dg .rel>.nb{stroke:var(--accent);stroke-width:1.8;stroke-dasharray:5 3}
 .dg .amb .nb{stroke:var(--warn);stroke-width:2}
 .dg .ambm circle{fill:var(--warn)}.dg .ambm text{fill:var(--canvas);font-size:10px;font-weight:700}
 .dg .k-file .nb{fill:var(--canvas);fill-opacity:.55;stroke-dasharray:6 3}
@@ -365,7 +416,10 @@ body.nosrc .pane.src { display: none; }
         <button type="button" role="tab" id="mDiag" aria-selected="false">Diagramme</button>
       </div>
       <span class="modehint">Navigator: Anforderung → Umsetzung → Schnittstellen → Test. Diagramme: grafische Sichten.</span>
+      <label class="tiptog" title="Beim Überfahren mit der Maus erklärt der Viewer Linien, Formen und Begriffe"><input type="checkbox" id="tipsOn"> Notation erklären</label>
     </div>
+    <div class="focusbar" id="focusBar"></div>
+    <div class="brief" id="brief" hidden></div>
     <div class="navmode" id="navMode">
       <div class="nbar">
         <div class="vtabs" role="tablist" id="ntabs"></div>
@@ -436,6 +490,7 @@ body.nosrc .pane.src { display: none; }
 <svg id="markers" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="dg"><defs id="mdefs"></defs></svg>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true"><div class="mhead"><b id="mTitle"></b><span id="mHint"></span><button class="btn" id="mClose" type="button">Schließen</button></div><div class="mbody" id="mBody"></div></div></div>
 <div class="toast" id="toast" hidden></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
 <div class="drop" id="drop" hidden>Ordner oder .sysml-Dateien hier ablegen</div>
 
 <script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
@@ -1251,7 +1306,7 @@ function renderSVG(model, g) {
     const n = byId.get(gn.id); if (!n) return;
     const x = ox + gn.x, y = oy + gn.y, w = gn.width, h = gn.height; absPos[gn.id] = [x, y];
     const amb = n.el && n.el.isDef && n.el.name && (IDX.defs.get(n.el.name) || []).length > 1;
-    const attrs = `class="nd ${n.cls || ''}${n.collapsed ? ' collapsed' : ''}${amb ? ' amb' : ''}" data-id="${n.id}"${n.el ? ` data-eid="${n.el.eid}"` : ''}`;
+    const attrs = `class="nd ${n.cls || ''}${n.collapsed ? ' collapsed' : ''}${amb ? ' amb' : ''}" data-id="${n.id}" data-shape="${n.shape}"${n.pseudo ? ` data-pseudo="${n.pseudo}"` : ''}${n.rounded ? ' data-usage="1"' : ''}${n.el ? ` data-eid="${n.el.eid}"` : ''}`;
     if (n.shape === 'circle') { out.push(`<g ${attrs}><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 1}" class="ps-fill"/></g>`); }
     else if (n.shape === 'bullseye') { out.push(`<g ${attrs}><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 1}" class="ps-ring"/><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${w / 2 - 6}" class="ps-fill"/></g>`); }
     else if (n.shape === 'diamond') { out.push(`<g ${attrs}><path d="M${x + w / 2},${y} L${x + w},${y + h / 2} L${x + w / 2},${y + h} L${x},${y + h / 2} Z" class="nb"/>${n.el && !n.el.anon ? `<text x="${x + w / 2}" y="${y - 5}" text-anchor="middle" class="st">${esc(n.el.name)}</text>` : ''}</g>`); }
@@ -1359,9 +1414,10 @@ function resolveChain(chain, ctx) {
   for (const s of dot.slice(1)) { const nx = features(cur).find(f => f.name === s); if (!nx) break; path.push(nx); cur = nx; }
   return { el: cur, path };
 }
-let TR = { edges: [], out: new Map(), inn: new Map() };
+let TR = { edges: [], out: new Map(), inn: new Map(), broken: [], links: [] };
 function buildTrace() {
-  const edges = [], out = new Map(), inn = new Map();
+  const edges = [], out = new Map(), inn = new Map(), broken = [], links = [];
+  const miss = (r, holder, which, chain) => broken.push({ type: r.type, which, chain, line: r.line, file: r.file || holder.file, holder });
   const push = (m, k, e) => { if (!m.has(k)) m.set(k, []); m.get(k).push(e); };
   const add = (a, b, type, x) => {
     if (!a || !b || a === b) return;
@@ -1385,26 +1441,28 @@ function buildTrace() {
   }
   for (const holder of [IDX.root, ...IDX.all]) for (const r of holder.rels) {
     const info = { line: r.line, file: r.file || holder.file };
-    if (r.type === 'satisfy') { const a = r.srcEl ? { el: r.srcEl } : resolveChain(r.src, holder); const b = resolveChain(r.tgt, holder); if (a && b) add(a.el, b.el, 'satisfy', info); }
-    else if (r.type === 'verify') { const b = resolveChain(r.tgt, holder); if (b) add(testOwner(r.srcEl || holder), b.el, 'verify', info); }
-    else if (r.type === 'allocate') { const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (a && b) add(a.el, b.el, 'allocate', info); }
+    if (r.type === 'satisfy') { const a = r.srcEl ? { el: r.srcEl } : resolveChain(r.src, holder); const b = resolveChain(r.tgt, holder); if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (a && b) add(a.el, b.el, 'satisfy', info); }
+    else if (r.type === 'verify') { const b = resolveChain(r.tgt, holder); if (b) add(testOwner(r.srcEl || holder), b.el, 'verify', info); else miss(r, holder, 'tgt', r.tgt); }
+    else if (r.type === 'allocate') { const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (a && b) add(a.el, b.el, 'allocate', info); }
     else if (r.type === 'dependency') {
       const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a || !b) continue;
       const m = r.meta || [];
       if (m.includes('derivation')) add(b.el, a.el, 'derive', info); else if (m.includes('refinement')) add(a.el, b.el, 'refine', info); else add(a.el, b.el, 'depend', info);
     }
     else if (['connect', 'interface', 'flow', 'bind'].includes(r.type)) {
-      const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder); if (!a || !b) continue;
+      const a = resolveChain(r.src, holder), b = resolveChain(r.tgt, holder);
+      if (!a) miss(r, holder, 'src', r.src); if (!b) miss(r, holder, 'tgt', r.tgt); if (!a || !b) continue;
       const portOf = p => { const ps = p.path.filter(x => x.kind === 'port'); return ps.length ? ps[ps.length - 1] : p.el; };
       const pa = portOf(a), pb = portOf(b), ua = a.path[0], ub = b.path[0];
       const t = r.type === 'flow' ? 'flow' : r.type === 'bind' ? 'bind' : 'connect';
       const lab = r.label || (r.el && r.el.types[0] ? shortT(r.el.types[0]) : '');
       add(pa, pb, t, Object.assign({ label: lab }, info));
+      links.push({ type: t, pa, pb, ua, ub, deleg: (a.path.length === 1) !== (b.path.length === 1), label: lab, holder, line: r.line, file: info.file });
       if (ua !== pa || ub !== pb) if (ua !== ub) add(ua, ub, t, Object.assign({ label: lab, via: (pa.name || '') + ' → ' + (pb.name || '') }, info));
       if (r.el) { add(r.el, pa, 'end', info); add(r.el, pb, 'end', info); }
     }
   }
-  TR = { edges, out, inn };
+  TR = { edges, out, inn, broken, links };
   return TR;
 }
 const trOut = (x, t) => (TR.out.get(x) || []).filter(e => !t || e.type === t).map(e => e.b);
@@ -1527,12 +1585,192 @@ function coverage() {
   return rows;
 }
 
-if (typeof module !== 'undefined') module.exports = { buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
+
+/* ================= Klartext: Steckbrief eines Elements ================= */
+const KIND_PLAIN = {
+  'part def': 'ein Bauplan für Komponenten (part def)', 'part': 'eine konkrete Komponente (part)',
+  'item def': 'eine Art von Ding, das fließt oder ausgetauscht wird (item def)', 'item': 'ein Ding, das fließt oder ausgetauscht wird (item)',
+  'port def': 'eine Schnittstellenart (port def)', 'port': 'ein Anschluss (port)',
+  'interface def': 'eine Verbindungsart zwischen zwei Ports (interface def)', 'interface': 'eine konkrete Verbindung zwischen zwei Ports (interface)',
+  'connection def': 'eine Verbindungsart (connection def)', 'connection': 'eine konkrete Verbindung (connection)',
+  'attribute def': 'eine Eigenschaftsart, z. B. eine physikalische Größe (attribute def)', 'attribute': 'eine Eigenschaft mit Wert (attribute)',
+  'enum def': 'eine Aufzählung fester Werte (enum def)',
+  'requirement def': 'eine Anforderungsvorlage (requirement def)', 'requirement': 'eine konkrete Anforderung (requirement)',
+  'concern def': 'ein Anliegen eines Stakeholders (concern def)', 'concern': 'ein Anliegen (concern)',
+  'verification def': 'ein Testverfahren (verification def)', 'verification': 'ein konkreter Test (verification)',
+  'analysis def': 'eine Analyse (analysis def)', 'analysis': 'eine Analyse (analysis)',
+  'use case def': 'ein Anwendungsfall (use case def)', 'use case': 'ein Anwendungsfall (use case)',
+  'action def': 'ein Ablauf (action def)', 'action': 'ein Ablaufschritt (action)',
+  'state def': 'eine Zustandsmaschine (state def)', 'state': 'ein Zustand (state)',
+  'calc def': 'eine Berechnung (calc def)', 'calc': 'eine Berechnung (calc)',
+  'constraint def': 'eine Bedingung (constraint def)', 'constraint': 'eine Bedingung (constraint)',
+  'occurrence def': 'etwas, das zeitlich existiert (occurrence def)', 'allocation def': 'eine Zuordnungsart (allocation def)',
+  'flow': 'ein Fluss (flow)', 'package': 'ein Paket, das Elemente gruppiert (package)',
+};
+const plainKind = el => KIND_PLAIN[kindLabel(el)] || (kindLabel(el) ? '„' + kindLabel(el) + '“' : 'ein Merkmal');
+const DIR_PLAIN = { in: 'nimmt auf (in)', out: 'gibt aus (out)', inout: 'tauscht in beide Richtungen (inout)' };
+const uniq = l => [...new Set(l.filter(Boolean))];
+function listSeg(els, fmt) { const out = []; els.forEach((e, i) => { if (i) out.push(', '); out.push({ el: e }); if (fmt) { const x = fmt(e); if (x) out.push(' ' + x); } }); return out; }
+function partnersOf(el) {
+  // Verbundene Komponenten: über Usages (akku ↔ rechner) und über Ports
+  const group = el.isDef ? [el, ...trIn(el, 'typed')] : [el, ...trOut(el, 'typed')];
+  const res = new Map();
+  for (const g of group) for (const e of [...(TR.out.get(g) || []), ...(TR.inn.get(g) || [])]) {
+    if (!['connect', 'flow', 'bind'].includes(e.type)) continue;
+    const o = e.a === g ? e.b : e.a; if (stageOf(o) !== 'struct' || group.includes(o)) continue;
+    if (!res.has(o)) res.set(o, uniq([e.label, e.via].filter(Boolean).map(String)));
+  }
+  return res;
+}
+function satisfiesOf(el) {
+  const group = el.isDef ? [el, ...trIn(el, 'typed')] : [el, ...trOut(el, 'typed')];
+  return uniq(group.flatMap(g => trOut(g, 'satisfy')));
+}
+function describe(el, impactDepth) {
+  const rows = []; const R = (k, v, gap) => { if (v && v.length) rows.push({ k, v, gap: !!gap }); };
+  const st = stageOf(el);
+  const def = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null;
+  const owner = el.parent && el.parent.name && !['package', 'root'].includes(el.parent.kind) ? el.parent : null;
+  const lead = [el.name && !el.anon ? el.name : dispName(el), ' ist ' + plainKind(el)];
+  if (def) lead.push(' vom Typ ', { el: def });
+  if (owner) lead.push(el.kind === 'port' ? ' an ' : ' in ', { el: owner });
+  const id = el.short || (def && def.short); if (id) lead.push(' – ID ' + id);
+  lead.push('.');
+  const doc = el.doc || (def && def.doc); if (doc) R('Text', ['„' + doc + '“']);
+  const supers = el.isDef ? superDefs(el) : [];
+  if (supers.length) { const inh = supers.flatMap(d => features(d).map(f => f.name)).filter(Boolean); R('Erbt von', [...listSeg(supers), inh.length ? ' – übernimmt ' + uniq(inh).slice(0, 6).join(', ') : '']); }
+  const subs = el.isDef ? trIn(el, 'spec') : []; if (subs.length) R('Spezialisiert durch', listSeg(subs));
+
+  if (st === 'struct' || el.kind === 'item') {
+    const parts = partsOf(el); if (parts.length) R('Besteht aus', listSeg(parts, p => p.types[0] ? '(' + shortT(p.types[0]) + (p.mult ? ' ×' + p.mult : '') + ')' : ''));
+    if (el.isDef) { const users = trIn(el, 'typed').filter(u => u.parent && u.parent.name); if (users.length) R('Verwendet in', listSeg(users.map(u => u.parent).filter((v, i, a) => a.indexOf(v) === i), o => { const u = users.find(x => x.parent === o); return 'als ' + u.name; })); else R('Verwendet in', ['noch nirgends – keine Usage dieser Definition'], true); }
+    const ports = portsOf(el); if (ports.length) R('Anschlüsse', listSeg(ports, p => { const d = portDir(p); return '– ' + (d ? DIR_PLAIN[d] : 'Richtung offen'); }));
+    const pt = partnersOf(el); if (pt.size) R('Verbunden mit', listSeg([...pt.keys()], o => pt.get(o).length ? '(' + pt.get(o).join(', ') + ')' : ''));
+    const beh = features(el).filter(f => (f.kind === 'action' || f.kind === 'state') && f.performed);
+    if (beh.length) R('Verhalten', listSeg(beh, b => b.performed === 'perform' ? '(führt aus)' : '(zeigt)'));
+    const allocIn = el.isDef ? [] : trIn(el, 'allocate'); if (allocIn.length) R('Darauf läuft', listSeg(allocIn));
+    const sat = satisfiesOf(el);
+    if (sat.length) R('Erfüllt', listSeg(sat, r => idOf_(r) ? '[' + idOf_(r) + ']' : ''));
+    else { let anc = null; for (let p = el.parent; p && !anc; p = p.parent) if (satisfiesOf(p).length) anc = p; R('Erfüllt', anc ? ['nichts direkt – gehört zu ', { el: anc }, ', das Anforderungen erfüllt'] : ['keine Anforderung – wozu gibt es diese Komponente?'], !anc); }
+    const tests = uniq([...sat.flatMap(r => trIn(r, 'verify')), ...(el.isDef ? trIn(el, 'subject') : (def ? trIn(def, 'subject') : []))]);
+    if (tests.length) R('Geprüft durch', listSeg(tests)); else if (sat.length) R('Geprüft durch', ['kein Test – die erfüllten Anforderungen sind ungeprüft'], true);
+  }
+  if (st === 'iface') {
+    if (el.kind === 'port') {
+      const d = portDir(el); if (!el.isDef) R('Richtung', [d ? DIR_PLAIN[d] : 'offen', el.types[0] && el.types[0].startsWith('~') ? ' – konjugiert (~): die Richtungen des Port-Typs sind umgedreht' : '']);
+      const pd = el.isDef ? el : def; const carried = pd ? features(pd).filter(f => f.dir || f.kind === 'attribute' || f.kind === 'item') : [];
+      if (carried.length) R('Überträgt', [carried.map(featLine).join(', ')]);
+      const conn = [...(TR.out.get(el) || []), ...(TR.inn.get(el) || [])].filter(e => ['connect', 'flow', 'bind'].includes(e.type));
+      if (conn.length) R('Verbunden mit', listSeg(conn.map(e => e.a === el ? e.b : e.a), o => { const e = conn.find(x => x.a === o || x.b === o); return e.label ? '(' + e.label + ')' : ''; }));
+      else if (!el.isDef) R('Verbunden mit', ['nichts – offener Anschluss'], true);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet von', listSeg(users)); }
+    } else {
+      if (el.ends && el.ends.length) R('Verbindet', [el.ends.join(' ↔ ')]);
+      const ends = el.children.filter(c => c.role === 'end'); if (ends.length) R('Enden', [ends.map(featLine).join(', ')]);
+      if (el.isDef) { const users = trIn(el, 'typed'); if (users.length) R('Verwendet in', listSeg(users)); }
+    }
+  }
+  if (st === 'req') {
+    const subj = (el.isDef ? el : def || el).children.filter(c => c.role === 'subject'); if (subj.length) R('Gegenstand', [subj.map(featLine).join(', ')]);
+    const cons = el.constraints || (def && def.constraints); if (cons) R('Bedingung', [cons.join('; ')]);
+    const up = el.parent && el.parent.kind === 'requirement' ? el.parent : null; if (up) R('Teil von', [{ el: up }]);
+    const kids = trOut(el, 'owns').filter(c => c.kind === 'requirement'); if (kids.length) R('Enthält', listSeg(kids));
+    const from = trIn(el, 'derive'), to = trOut(el, 'derive'); if (from.length) R('Abgeleitet aus', listSeg(from)); if (to.length) R('Abgeleitet zu', listSeg(to));
+    const ref = [...trOut(el, 'refine'), ...trIn(el, 'refine')]; if (ref.length) R('Verfeinerung', listSeg(ref));
+    if (!kids.length) {
+      const row = coverage().find(r => r.el === el);
+      const sat = row ? row.sat : uniq(trIn(el, 'satisfy')), ver = row ? row.ver : uniq(trIn(el, 'verify'));
+      R('Umgesetzt durch', sat.length ? listSeg(sat) : ['niemand – es fehlt ein satisfy'], !sat.length);
+      R('Verifiziert durch', ver.length ? listSeg(ver) : ['kein Test – es fehlt ein verify'], !ver.length);
+    }
+  }
+  if (st === 'test') {
+    const ver = trOut(el, 'verify'); R('Prüft', ver.length ? listSeg(ver) : ['keine Anforderung – das objective enthält kein verify'], !ver.length);
+    const subj = trOut(el, 'subject'); if (subj.length) R('Prüfling', listSeg(subj));
+    const impl = uniq(ver.flatMap(r => trIn(r, 'satisfy'))); if (impl.length) R('Betrifft Umsetzung', listSeg(impl));
+  }
+  if (st === 'behav') {
+    const kids = features(el).filter(c => !c.isDef && (BEHAV.has(c.kind)) && !c.anon && c.kind !== 'accept');
+    if (kids.length) R(el.kind === 'state' ? 'Zustände' : 'Schritte', listSeg(kids));
+    const params = features(el).filter(f => f.dir && !BEHAV.has(f.kind)); if (params.length) R('Ein-/Ausgänge', [params.map(featLine).join(', ')]);
+    if (el.kind === 'state' && el.parent) {
+      const tr = relsOf(el.parent).filter(r => (r.type === 'transition' || r.type === 'succession') && lastSeg(r.src) === el.name);
+      if (tr.length) R('Übergänge', [tr.map(r => (r.trigger ? 'bei ' + r.trigger : 'danach') + (r.guard ? ' [' + r.guard + ']' : '') + ' → ' + (lastSeg(r.tgt) === 'done' ? 'Ende' : lastSeg(r.tgt))).join('; ')]);
+    }
+    const users = el.isDef ? trIn(el, 'typed').filter(u => u.performed && u.parent) : (el.performed && el.parent ? [el] : []);
+    if (users.length) R(el.kind === 'state' ? 'Gezeigt von' : 'Ausgeführt von', listSeg(users.map(u => u.parent)));
+    const alloc = trOut(el, 'allocate'); if (alloc.length) R('Alloziert auf', listSeg(alloc));
+  }
+  if (st) {
+    const imp = impactOf(el, impactDepth || 2);
+    const n = k => imp.filter(x => stageOf(x.el) === k).length;
+    const parts = [imp.length + ' Element' + (imp.length === 1 ? '' : 'e')]; if (n('req')) parts.push(n('req') + ' Anforderung' + (n('req') > 1 ? 'en' : '')); if (n('test')) parts.push(n('test') + ' Test' + (n('test') > 1 ? 's' : ''));
+    if (!imp.length) R('Bei Änderung', ['betrifft nichts weiter im Modell']); else R('Bei Änderung', ['betrifft ' + parts[0] + (parts.length > 1 ? ', darunter ' + parts.slice(1).join(' und ') : ''), { go: 'impact', label: 'ansehen' }]);
+  }
+  R('Ort', [{ src: true, label: (el.file ? el.file + ', ' : '') + 'Zeile ' + el.line }]);
+  return { lead, rows };
+}
+function idOf_(el) { if (el.short) return el.short; const d = !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : null; return d && d.short || ''; }
+
+/* ================= Modell-Check ================= */
+const RULES = {
+  parse: { sev: 'error', title: 'Nicht verstandene Stellen im Quelltext', why: 'Der Parser hat hier etwas übersprungen. Oft ist es ein Tippfehler oder eine fehlende Klammer – dann fehlen Teile des Modells in allen Sichten.' },
+  broken: { sev: 'error', title: 'Verweis ins Leere', why: 'Eine Beziehung zeigt auf einen Namen, den es im Modell nicht gibt. Die Beziehung wirkt dann nicht – meist ein Tippfehler oder ein fehlender Import.' },
+  type: { sev: 'error', title: 'Unbekannter Typ', why: 'Der Typ hinter dem Doppelpunkt ist nirgends definiert. Ohne Definition weiß das Modell nicht, was dieses Element ist.' },
+  direction: { sev: 'error', title: 'Port-Richtungen passen nicht zusammen', why: 'Verbundene Ports sollten zueinander passen: was einer ausgibt (out), muss der andere aufnehmen (in). Zwei Ausgänge gegeneinander sind ein Kurzschluss im Modell. Lösung ist oft ein konjugierter Port (~).' },
+  unsat: { sev: 'gap', title: 'Anforderung ohne Umsetzung', why: 'Keine Komponente erfüllt diese Anforderung. Sie ist ein Versprechen ohne Umsetzung.' },
+  unver: { sev: 'gap', title: 'Anforderung ohne Test', why: 'Kein Test verifiziert diese Anforderung. Ob das System sie erfüllt, bleibt unbewiesen.' },
+  emptytest: { sev: 'gap', title: 'Test ohne Anforderung', why: 'Ein Test, der keine Anforderung verifiziert, prüft etwas, das niemand gefordert hat – oder das verify fehlt.' },
+  ambig: { sev: 'hint', title: 'Name mehrfach definiert', why: 'Gleichnamige Definitionen in verschiedenen Paketen sind erlaubt, machen unqualifizierte Verweise aber mehrdeutig. Eindeutig wird es mit Paket::Name.' },
+  openport: { sev: 'hint', title: 'Offener Anschluss', why: 'Die Komponente wird in einer Baugruppe verwendet, aber dieser Port ist nirgends verbunden. Entweder fehlt eine Verbindung, oder der Port ist überflüssig.' },
+  noreq: { sev: 'hint', title: 'Komponente ohne Anforderung', why: 'Weder die Komponente noch eine Baugruppe, zu der sie gehört, erfüllt eine Anforderung. Jede Komponente sollte sich auf eine Anforderung zurückführen lassen – sonst stellt sich die Frage, wozu sie da ist.' },
+  unused: { sev: 'hint', title: 'Definition ohne Verwendung', why: 'Diese Definition wird nirgends verwendet: keine Usage, keine Spezialisierung. Vielleicht ein Überbleibsel oder ein noch nicht eingebauter Baustein.' },
+};
+const LIB_TYPE = /^(ScalarValues|ISQ\w*|SI\w*|USCustomaryUnits|Quantities|MeasurementReferences|Items|Parts|Ports|Actions|States|Requirements|Base|Links|Occurrences|Objects|Performances|Collections|VectorValues|NumericalFunctions|TrigFunctions|Time|Metaobjects|KerML|SysML|RequirementDerivation)::/;
+const LIB_SIMPLE = new Set(['Real', 'Integer', 'Natural', 'Positive', 'Rational', 'Complex', 'Boolean', 'String', 'Number', 'NumericalValue', 'ScalarValue', 'Anything', 'Item', 'Part', 'Port', 'Action', 'State', 'Requirement', 'Occurrence', 'Interface', 'Connection', 'Flow', 'Time', 'TimeInstantValue', 'DurationValue']);
+const isLibType = t => { const n = t.replace(/^~/, ''); return LIB_TYPE.test(n) || LIB_SIMPLE.has(lastSeg(n)) || /Value$/.test(lastSeg(n)); };
+function modelChecks(warns) {
+  const items = []; const I = (rule, el, msg, fix, extra) => items.push(Object.assign({ rule, sev: RULES[rule].sev, el, msg, fix, line: el ? el.line : null, file: el ? el.file : null }, extra || {}));
+  for (const w of warns || []) I('parse', null, w.msg, 'Zeile prüfen: fehlt ein ; oder eine }?', { line: w.line, file: w.file });
+  for (const b of TR.broken || []) I('broken', b.holder && b.holder.kind !== 'root' ? b.holder : null, `${b.type}: „${b.chain}“ wurde nicht gefunden`, 'Namen prüfen oder mit Paket qualifizieren, z. B. Paket::' + lastSeg(b.chain), { line: b.line, file: b.file });
+  for (const el of IDX.all) for (const t of el.types) if (!resolveDef(t, el) && !isLibType(t) && !(IDX.byName.get(lastSeg(t)) || []).length) I('type', el, `${dispName(el)}: Typ „${t}“ ist nicht definiert`, `${el.kind === 'feature' ? 'part' : el.kind} def ${lastSeg(t)} { … }  // oder Import ergänzen`);
+  for (const l of TR.links || []) {
+    if (l.deleg || l.type === 'bind') continue;
+    const da = l.pa.kind === 'port' ? portDir(l.pa) : null, db = l.pb.kind === 'port' ? portDir(l.pb) : null;
+    if (da && db && da === db && da !== 'inout') I('direction', l.pa, `${dispName(l.pa)} und ${dispName(l.pb)} sind beide „${da}“`, `einen der beiden Ports konjugieren: port ${l.pb.name} : ~${l.pb.types[0] ? shortT(l.pb.types[0]).replace(/^~/, '') : 'PortTyp'};`, { line: l.line, file: l.file });
+    else if (l.type === 'flow' && (da === 'in' || db === 'out')) I('direction', l.pa, `Fluss läuft von ${dispName(l.pa)} (${da || '?'}) nach ${dispName(l.pb)} (${db || '?'}) – gegen die Port-Richtung`, 'Quelle und Ziel des flow tauschen oder Port-Richtungen prüfen', { line: l.line, file: l.file });
+  }
+  for (const r of coverage()) {
+    if (r.status === 'group') continue;
+    if (!r.sat.length) I('unsat', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `satisfy ${r.el.name} by <komponente>;`);
+    if (!r.ver.length) I('unver', r.el, `${r.id ? '[' + r.id + '] ' : ''}${r.el.name}`, `verification def ${r.el.name[0].toUpperCase() + r.el.name.slice(1)}Test { objective { verify ${r.el.name}; } }`);
+  }
+  for (const t of IDX.all.filter(e => stageOf(e) === 'test' && e.isDef)) if (!trOut(t, 'verify').length) I('emptytest', t, t.name, 'objective { verify <anforderung>; }');
+  for (const a of IDX.ambig) I('ambig', a.defs[0], `„${a.name}“: ${a.defs.map(d => d.qn).join(', ')}`, `Verweise qualifizieren, z. B. : ${a.defs[0].qn}`, { ambig: a.name });
+  // offene Anschlüsse
+  const connected = new Set(); for (const e of TR.edges) if (['connect', 'flow', 'bind', 'end'].includes(e.type)) { connected.add(e.a); connected.add(e.b); }
+  for (const p of IDX.all.filter(e => e.kind === 'port' && !e.isDef && e.parent && stageOf(e.parent) === 'struct')) {
+    const o = p.parent; const used = o.isDef ? trIn(o, 'typed').some(u => u.parent && stageOf(u.parent) === 'struct') : stageOf(o.parent) === 'struct';
+    if (used && !connected.has(p)) I('openport', p, `${o.name}.${p.name} ist nicht verbunden`, `connect <teil>.${p.name} to <anderesTeil>.<port>;`);
+  }
+  // Komponenten ohne Anforderungsbezug
+  const covered = new Set(); const mark = el => { if (!el || covered.has(el)) return; covered.add(el); for (const s of el.isDef ? superDefs(el) : []) mark(s); for (const p of partsOf(el)) mark(p); for (const t of el.isDef ? trIn(el, 'typed') : trOut(el, 'typed')) if (!covered.has(t)) { covered.add(t); for (const p of partsOf(t)) mark(p); if (t.isDef) superDefs(t).forEach(mark); } };
+  for (const e of TR.edges) if (e.type === 'satisfy') mark(e.a);
+  if (covered.size) for (const el of IDX.all.filter(e => e.kind === 'part' && e.name && (e.isDef || stageOf(e.parent) === 'struct'))) if (!covered.has(el) && !(el.isDef && trIn(el, 'typed').length)) I('noreq', el, dispName(el), `satisfy <anforderung> by ${el.isDef ? '<usage von ' + el.name + '>' : el.name};`);
+  // unbenutzte Definitionen
+  for (const d of IDX.all.filter(e => e.isDef && e.name && ['part', 'port', 'item', 'interface', 'connection', 'action', 'state', 'requirement'].includes(e.kind))) {
+    const usedBy = (TR.inn.get(d) || []).some(e => ['typed', 'spec', 'subject', 'satisfy', 'verify', 'allocate'].includes(e.type)) || (TR.out.get(d) || []).some(e => e.type === 'allocate');
+    const referenced = IDX.all.some(e => e !== d && (e.types.concat(e.specs).some(t => lastSeg(t) === d.name)));
+    if (!usedBy && !referenced) I('unused', d, `${kindLabel(d)} ${d.name}`, `part x : ${d.name};  // verwenden – oder Definition entfernen`);
+  }
+  return items;
+}
+if (typeof module !== 'undefined') module.exports = { describe, modelChecks, RULES, KIND_PLAIN, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
 
 
 /* ================= App ================= */
 const SAMPLE_FILES = [{"name": "System.sysml", "text": "// Beispielprojekt Indoorroboter – Systemebene: Instanz, Umsetzung und Allokation\npackage System {\n    private import Struktur::*;\n    private import Anforderungen::*;\n\n    part roboter : Struktur::Roboter;\n\n    // Welche Komponente erfüllt welche Anforderung?\n    satisfy Anforderungen::roboterAnforderungen.laufzeit by roboter.akku;\n    satisfy Anforderungen::roboterAnforderungen.hindernis by roboter.lidar;\n    satisfy Anforderungen::roboterAnforderungen.scanrate by roboter.lidar;\n    satisfy Anforderungen::roboterAnforderungen.gewicht by roboter;\n\n    // Die Navigation läuft auf dem Steuerrechner\n    allocate Verhalten::NavigiereZumZiel to roboter.rechner;\n}\n"}, {"name": "anforderungen/Anforderungen.sysml", "text": "// Beispielprojekt Indoorroboter – Anforderungen\nprivate import ScalarValues::*;\n\npackage Anforderungen {\n    private import RequirementDerivation::*;\n\n    requirement def <'A1'> Laufzeit {\n        doc /* Der Roboter fährt mit einer Akkuladung mindestens 2 Stunden. */\n        subject r : Struktur::Roboter;\n        attribute laufzeit : Real;\n        require constraint { laufzeit >= 2 }\n    }\n    requirement def <'A2'> Hinderniserkennung {\n        doc /* Hindernisse ab 30 cm Entfernung werden in jeder Fahrtrichtung erkannt. */\n    }\n    requirement def <'A2.1'> Scanrate {\n        doc /* Der Lidar liefert mindestens 10 vollständige Scans pro Sekunde. */\n    }\n    requirement def <'A3'> Gewicht {\n        doc /* Die Gesamtmasse des Roboters liegt unter 4 kg. */\n        attribute mGesamt : Real;\n        require constraint { mGesamt < 4 }\n    }\n    requirement def <'A4'> Notaus {\n        doc /* Ein Not-Aus-Taster stoppt beide Antriebsmotoren in weniger als 100 ms. */\n    }\n\n    requirement roboterAnforderungen {\n        doc /* Anforderungen an den Indoorroboter, Stand Version 1.0 */\n        requirement laufzeit : Laufzeit;\n        requirement hindernis : Hinderniserkennung;\n        requirement scanrate : Scanrate;\n        requirement gewicht : Gewicht;\n        requirement notaus : Notaus;\n    }\n\n    // Die Scanrate ist aus der Hinderniserkennung abgeleitet\n    #derivation connection {\n        end #original ::> roboterAnforderungen.hindernis;\n        end #derive ::> roboterAnforderungen.scanrate;\n    }\n}\n"}, {"name": "struktur/Struktur.sysml", "text": "// Beispielprojekt Indoorroboter – Struktur\nprivate import ScalarValues::*;\n\npackage Struktur {\n    attribute def Spannung :> Real;\n    attribute def Masse :> Real;\n\n    item def Fahrbefehl {\n        attribute v : Real;      // Lineargeschwindigkeit in m/s\n        attribute omega : Real;  // Drehrate in rad/s\n    }\n    item def Scan;\n\n    port def EnergiePort {\n        in attribute u : Spannung;\n    }\n    port def BefehlPort {\n        out item cmd : Fahrbefehl;\n    }\n    port def ScanPort {\n        out item scan : Scan;\n    }\n\n    interface def Versorgung {\n        end quelle : ~EnergiePort;\n        end senke : EnergiePort;\n    }\n\n    abstract part def Komponente {\n        attribute masse : Masse;\n    }\n    part def Akku :> Komponente {\n        attribute kapazitaet : Real = 5.2;\n        port ausgang : ~EnergiePort;\n    }\n    part def Steuerrechner :> Komponente {\n        doc /* Raspberry Pi 5 mit ROS 2 Jazzy */\n        perform action navigation : Verhalten::NavigiereZumZiel;\n        port energie : EnergiePort;\n        port scanEin : ~ScanPort;\n        port fahrAus : BefehlPort;\n    }\n    part def Lidar :> Komponente {\n        port energie : EnergiePort;\n        port scanAus : ScanPort;\n    }\n    part def Motor :> Komponente {\n        attribute nennDrehzahl : Real;\n    }\n    part def Rad {\n        attribute durchmesser : Real = 0.065;\n    }\n    part def Antrieb {\n        port energie : EnergiePort;\n        port fahrEin : ~BefehlPort;\n        part motorLinks : Motor;\n        part motorRechts : Motor;\n        part rad : Rad[2];\n    }\n    part def Roboter {\n        attribute gesamtmasse : Masse;\n        part akku : Akku;\n        part rechner : Steuerrechner;\n        part lidar : Lidar;\n        part antrieb : Antrieb;\n\n        interface : Versorgung connect akku.ausgang to rechner.energie;\n        interface : Versorgung connect akku.ausgang to lidar.energie;\n        interface : Versorgung connect akku.ausgang to antrieb.energie;\n        connect lidar.scanAus to rechner.scanEin;\n        flow of Fahrbefehl from rechner.fahrAus.cmd to antrieb.fahrEin.cmd;\n\n        exhibit state betrieb : Verhalten::Betriebszustaende;\n    }\n}"}, {"name": "tests/Tests.sysml", "text": "// Beispielprojekt Indoorroboter – Nachweise\npackage Tests {\n    private import Struktur::*;\n    private import Anforderungen::*;\n\n    verification def LaufzeitTest {\n        doc /* Dauerlauf auf der Teststrecke mit voll geladenem Akku, Zeit bis zur Abschaltung messen. */\n        subject pruefling : Roboter;\n        objective {\n            verify Anforderungen::roboterAnforderungen.laufzeit;\n        }\n    }\n\n    verification def HindernisTest {\n        doc /* Prüfkörper 10 x 10 cm in 30 cm Abstand an 8 Positionen rund um den Roboter. */\n        subject pruefling : Roboter;\n        objective {\n            verify Anforderungen::roboterAnforderungen.hindernis;\n            verify Anforderungen::roboterAnforderungen.scanrate;\n        }\n    }\n}\n"}, {"name": "verhalten/Verhalten.sysml", "text": "// Beispielprojekt Indoorroboter – Verhalten\nprivate import ScalarValues::*;\n\npackage Verhalten {\n    item def Pose;\n    item def Pfad;\n\n    state def Betriebszustaende {\n        entry; then Bereit;\n\n        state Bereit;\n        accept StartBefehl then Navigation;\n\n        state Navigation {\n            entry; then Planen;\n            state Planen {\n                do action pfadSuchen;\n            }\n            accept PfadGefunden then Fahren;\n            state Fahren {\n                do action pfadFolgen;\n            }\n            accept HindernisErkannt then Planen;\n        }\n        transition zielErreicht first Navigation accept ZielErreicht then Bereit;\n        transition first Navigation accept AkkuNiedrig then Laden;\n\n        state Laden {\n            entry action andocken;\n        }\n        transition first Laden accept AkkuVoll then Bereit;\n    }\n\n    action def NavigiereZumZiel {\n        in item ziel : Pose;\n        out item erreicht : Boolean;\n\n        first start;\n        then action lokalisieren {\n            out item pose : Pose;\n        }\n        then action pfadPlanen {\n            in item pose : Pose;\n            in item ziel : Pose;\n            out item pfad : Pfad;\n        }\n        then action pfadFolgen {\n            in item pfad : Pfad;\n        }\n        then decide pruefen;\n            if zielErreicht then done;\n            else lokalisieren;\n\n        flow from ziel to pfadPlanen.ziel;\n        flow from lokalisieren.pose to pfadPlanen.pose;\n        flow from pfadPlanen.pfad to pfadFolgen.pfad;\n    }\n}"}];
-const DIAG_CSS = ".dg .nb{fill:var(--n-bg);stroke:var(--edge);stroke-width:1.2}.dg .k-part .nb{fill:var(--n-part)}.dg .k-item .nb{fill:var(--n-item)}.dg .k-port .nb{fill:var(--n-port)}.dg .k-attribute .nb,.dg .k-enum .nb{fill:var(--n-attr)}.dg .k-requirement .nb{fill:var(--n-req)}.dg .k-state .nb{fill:var(--n-state)}.dg .k-action .nb{fill:var(--n-action)}.dg .k-usage .nb{fill:var(--n-usage)}.dg .k-interface .nb,.dg .k-connection .nb{fill:var(--n-port)}.dg .nb.frame{fill-opacity:.4}.dg .collapsed .nb{stroke-dasharray:4 3}.dg .st{font-size:10.5px;font-style:italic;fill:var(--muted)}.dg .nm{font-size:12.5px;font-weight:600;fill:var(--ink)}.dg .it{font-style:italic}.dg .sep{stroke:var(--edge);stroke-width:.8;opacity:.45}.dg .ct{font-size:10.5px;font-style:italic;fill:var(--muted)}.dg .dc{fill:var(--ink)}.dg .ln{font-family:\"IBM Plex Mono\",Consolas,monospace;font-size:11px;fill:var(--ink)}.dg .pt{fill:var(--canvas);stroke:var(--port);stroke-width:1.4}.dg .pa{fill:var(--port)}.dg .pl{font-size:10.5px;fill:var(--ink)}.dg .ps-fill{fill:var(--ink)}.dg .ps-ring{fill:none;stroke:var(--ink);stroke-width:1.4}.dg .e{fill:none;stroke:var(--edge);stroke-width:1.2}.dg .e-flow{stroke:var(--flow);stroke-width:1.5}.dg .e-typed,.dg .e-satisfy,.dg .e-bind,.dg .e-defby,.dg .e-alloc{stroke-dasharray:5 4}.dg .e-iface{stroke-width:2.4}.dg .el{font-size:10.5px;fill:var(--muted);paint-order:stroke;stroke:var(--canvas);stroke-width:3px;stroke-linejoin:round}.dg .el-flow{fill:var(--flow)}.dg .mk-hollow{fill:var(--canvas);stroke:var(--edge);stroke-width:1.2}.dg .mk-solid{fill:var(--edge)}.dg .mk-line{fill:none;stroke:var(--edge);stroke-width:1.2}.dg .mk-flow{fill:var(--flow)}.dg [data-eid]{cursor:pointer}.dg .sel .nb,.dg .sel .pt{stroke:var(--accent);stroke-width:2.6}.dg .amb .nb{stroke:var(--warn);stroke-width:2}.dg .ambm circle{fill:var(--warn)}.dg .ambm text{fill:var(--canvas);font-size:10px;font-weight:700}.dg .k-file .nb{fill:var(--canvas);fill-opacity:.55;stroke-dasharray:6 3}.dg .k-file > .st{font-style:normal;letter-spacing:.06em}.dg .center .nb{stroke:var(--accent);stroke-width:2.2}.dg .e-inner{stroke-dasharray:2 4;stroke-width:1.4}.dg .k-state.nd .nb,.dg .k-action .nb{}";
+const DIAG_CSS = ".dg .nb{fill:var(--n-bg);stroke:var(--edge);stroke-width:1.2}.dg .k-part .nb{fill:var(--n-part)}.dg .k-item .nb{fill:var(--n-item)}.dg .k-port .nb{fill:var(--n-port)}.dg .k-attribute .nb,.dg .k-enum .nb{fill:var(--n-attr)}.dg .k-requirement .nb{fill:var(--n-req)}.dg .k-state .nb{fill:var(--n-state)}.dg .k-action .nb{fill:var(--n-action)}.dg .k-usage .nb{fill:var(--n-usage)}.dg .k-interface .nb,.dg .k-connection .nb{fill:var(--n-port)}.dg .nb.frame{fill-opacity:.4}.dg .collapsed .nb{stroke-dasharray:4 3}.dg .st{font-size:10.5px;font-style:italic;fill:var(--muted)}.dg .nm{font-size:12.5px;font-weight:600;fill:var(--ink)}.dg .it{font-style:italic}.dg .sep{stroke:var(--edge);stroke-width:.8;opacity:.45}.dg .ct{font-size:10.5px;font-style:italic;fill:var(--muted)}.dg .dc{fill:var(--ink)}.dg .ln{font-family:\"IBM Plex Mono\",Consolas,monospace;font-size:11px;fill:var(--ink)}.dg .pt{fill:var(--canvas);stroke:var(--port);stroke-width:1.4}.dg .pa{fill:var(--port)}.dg .pl{font-size:10.5px;fill:var(--ink)}.dg .ps-fill{fill:var(--ink)}.dg .ps-ring{fill:none;stroke:var(--ink);stroke-width:1.4}.dg .e{fill:none;stroke:var(--edge);stroke-width:1.2}.dg .e-flow{stroke:var(--flow);stroke-width:1.5}.dg .e-typed,.dg .e-satisfy,.dg .e-bind,.dg .e-defby,.dg .e-alloc{stroke-dasharray:5 4}.dg .e-iface{stroke-width:2.4}.dg .el{font-size:10.5px;fill:var(--muted);paint-order:stroke;stroke:var(--canvas);stroke-width:3px;stroke-linejoin:round}.dg .el-flow{fill:var(--flow)}.dg .mk-hollow{fill:var(--canvas);stroke:var(--edge);stroke-width:1.2}.dg .mk-solid{fill:var(--edge)}.dg .mk-line{fill:none;stroke:var(--edge);stroke-width:1.2}.dg .mk-flow{fill:var(--flow)}.dg [data-eid]{cursor:pointer}.dg .sel .nb,.dg .sel .pt{stroke:var(--accent);stroke-width:2.6}.dg .rel>.nb{stroke:var(--accent);stroke-width:1.8;stroke-dasharray:5 3}.dg .amb .nb{stroke:var(--warn);stroke-width:2}.dg .ambm circle{fill:var(--warn)}.dg .ambm text{fill:var(--canvas);font-size:10px;font-weight:700}.dg .k-file .nb{fill:var(--canvas);fill-opacity:.55;stroke-dasharray:6 3}.dg .k-file > .st{font-style:normal;letter-spacing:.06em}.dg .center .nb{stroke:var(--accent);stroke-width:2.2}.dg .e-inner{stroke-dasharray:2 4;stroke-width:1.4}.dg .k-state.nd .nb,.dg .k-action .nb{}";
 const TOKENS = ['--ink','--muted','--edge','--canvas','--n-bg','--n-part','--n-item','--n-port','--n-attr','--n-req','--n-state','--n-action','--n-usage','--port','--flow','--accent','--warn'];
 const $ = s => document.getElementById(s);
 const ta = $('code'), gutter = $('gutter');
@@ -1587,7 +1825,8 @@ const LEG = {
 const legendHTML = (model) => {
   const used = new Set(model.edges.map(e => e.cls));
   (function w(ns) { for (const n of ns) { if (n.ports.length) used.add('port'); if (n.pseudo) used.add(n.pseudo); if (n.el && n.el.isDef && (IDX.defs.get(n.el.name) || []).length > 1) used.add('amb'); w(n.children); } })(model.roots);
-  return [...(model.legend || []), 'amb'].filter(k => used.has(k) && LEG[k]).map(k => `<span><svg class="dg" width="34" height="12" viewBox="0 0 34 12">${LEG[k][0]}</svg>${LEG[k][1]}</span>`).join('');
+  const TIPK = { comp: 'e-comp', spec: 'e-spec', typed: 'e-typed', defby: 'e-defby', conn: 'e-conn', iface: 'e-iface', flow: 'e-flow', port: 'port-generic', trans: 'e-trans', succ: 'e-succ', init: 'init', final: 'final', satisfy: 'e-satisfy', contain: 'e-contain', amb: 'amb' };
+  return [...(model.legend || []), 'amb'].filter(k => used.has(k) && LEG[k]).map(k => `<span data-tip="${TIPK[k] || ''}"><svg class="dg" width="34" height="12" viewBox="0 0 34 12">${LEG[k][0]}</svg>${LEG[k][1]}</span>`).join('');
 };
 
 /* ---------- Zeichenfläche mit Zoom & Verschieben ---------- */
@@ -1647,6 +1886,7 @@ function reparse() {
   $('stat').textContent = `${nf > 1 ? nf + ' Dateien · ' : ''}${IDX.all.length} Elemente, ${nRel} Beziehungen` + (parseRes.warns.length ? ` · ${parseRes.warns.length} Hinweis${parseRes.warns.length > 1 ? 'e' : ''}` : ' · keine Parser-Hinweise');
   $('nEl').textContent = IDX.all.length;
   try { buildTrace(); } catch (e) { console.error(e); }
+  checkCache = null;
   renderAmbig(); renderWarns(); renderFileSel(); renderTree(); renderTabs();
   if (S.mode === 'diag') update(); else renderNav();
   if (!$('detail').hidden) refreshDetail();
@@ -1731,6 +1971,8 @@ async function update(refit) {
   renderOpts();
   const cands = v.cands(); const sel = $('ctx');
   sel.innerHTML = cands.map(c => `<option value="${esc(c.key)}">${esc(c.label)}</option>`).join('');
+  const F = navFocus();
+  if (F && S.ctxFocus[S.view] !== keyOf(F)) { const k = ctxFor(S.view, F, cands); if (k != null) S.ctx[S.view] = k; S.ctxFocus[S.view] = keyOf(F); }
   let want = S.ctx[S.view]; if (!cands.some(c => c.key === want)) want = cands[0] ? cands[0].key : '';
   sel.value = want; sel.disabled = cands.length < 2;
   const cand = cands.find(c => c.key === want);
@@ -1747,7 +1989,7 @@ async function update(refit) {
   } catch (e) { console.error(e); $('busy').hidden = true; showEmpty('Layout fehlgeschlagen: ' + esc(e.message || String(e))); return; }
   $('busy').hidden = true; $('empty').hidden = true;
   MV.title = (cand.el ? cand.el.name : cand.file || S.project) + '_' + v.label;
-  if (S.sel) markSel($('vp'), S.sel);
+  markFocus($('vp'));
   if (refit) MV.fit(); else MV.apply();
 }
 function showEmpty(html) { $('vp').innerHTML = ''; MV.cur = null; $('busy').hidden = true; const e = $('empty'); e.innerHTML = `<div>${html}</div>`; e.hidden = false; }
@@ -1759,9 +2001,9 @@ function hitEl(t) { const g = t && t.closest && t.closest('[data-eid]'); return 
 function hitLine(t) { const p = t && t.closest && t.closest('[data-line]'); return p ? { line: +p.dataset.line, file: p.dataset.file } : null; }
 function pickMain(t) {
   const el = hitEl(t);
-  if (el) { S.sel = el; markSel($('vp'), el); showInfo(el); if (isOpenable(el)) openDetail(el, true); return; }
+  if (el) { setFocus(el, { here: true }); showInfo(el); if (isOpenable(el)) openDetail(el, true); return; }
   const l = hitLine(t); if (l) { showInfoLine(l); return; }
-  S.sel = null; markSel($('vp'), null); $('info').textContent = 'Part anklicken öffnet das Detaildiagramm · Mausrad zoomt · Ziehen verschiebt';
+  $('info').textContent = 'Klick setzt den Fokus, ein Part öffnet zusätzlich sein Detaildiagramm · Mausrad zoomt · Ziehen verschiebt';
 }
 function markSel(vp, el) { vp.querySelectorAll('.sel').forEach(n => n.classList.remove('sel')); if (el) vp.querySelectorAll(`[data-eid="${el.eid}"]`).forEach(n => n.classList.add('sel')); }
 function drillTargets(el) {
@@ -1776,14 +2018,9 @@ function drillTargets(el) {
 const fileLine = el => `${S.files.length > 1 && el.file ? el.file + ', ' : ''}Zeile ${el.line}`;
 function showInfo(el) {
   const info = $('info'); info.innerHTML = '';
-  const add = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; n.textContent = txt; info.appendChild(n); return n; };
-  add('span', 'kd', kindLabel(el) || el.kind); add('span', 'qn', el.qn || el.name || '');
-  if (el.types.length) add('span', '', 'Typ: ' + el.types.join(', '));
-  const b = add('button', 'linkbtn', fileLine(el)); b.type = 'button'; b.onclick = () => gotoLine(el.file, el.line);
-  if (isOpenable(el)) { const d = add('button', 'linkbtn', 'Detaildiagramm'); d.type = 'button'; d.onclick = () => openDetail(el, true); }
-  if (stageOf(el)) { const d = add('button', 'linkbtn', 'Im Navigator verfolgen'); d.type = 'button'; d.onclick = () => navGo(el, 'trace'); }
-  for (const [lab, view, ctxEl] of drillTargets(el)) { if (S.view === view) continue; const d = add('button', 'linkbtn', lab); d.type = 'button'; d.onclick = () => { S.view = view; S.ctx[view] = keyOf(ctxEl); renderTabs(); update(true); }; }
-  if (el.doc) add('span', 'doc', el.doc);
+  const k = document.createElement('span'); k.className = 'kd'; k.textContent = kindLabel(el) || el.kind; info.appendChild(k);
+  const q = document.createElement('span'); q.className = 'qn'; q.textContent = el.qn || el.name || ''; info.appendChild(q);
+  const h = document.createElement('span'); h.textContent = 'ist im Fokus – Steckbrief und weitere Wege in der Leiste oben'; info.appendChild(h);
 }
 function showInfoLine(l) { const info = $('info'); info.innerHTML = ''; const b = document.createElement('button'); b.className = 'linkbtn'; b.type = 'button'; b.textContent = `Beziehung im Quelltext zeigen (${S.files.length > 1 && l.file ? l.file + ', ' : ''}Zeile ${l.line})`; b.onclick = () => gotoLine(l.file, l.line); info.appendChild(b); }
 
@@ -1821,7 +2058,7 @@ async function renderDetail(el) {
   if (el.isDef && (IDX.defs.get(el.name) || []).length > 1) ambNames.add(el.name);
   for (const t of el.types.concat(el.specs)) if (!t.includes('::') && (IDX.defs.get(lastSeg(t)) || []).length > 1) ambNames.add(lastSeg(t));
   for (const n of ambNames) { const w = add('button', 'ambbtn', `„${n}“ ist mehrfach definiert – Auswahl prüfen`); w.type = 'button'; w.onclick = () => openAmbig(n); }
-  if (el.doc) add('span', 'doc', el.doc);
+  const db = document.createElement('details'); db.className = 'dbrief'; db.open = briefOpen; db.innerHTML = '<summary>Steckbrief</summary>' + briefHTML(el); db.addEventListener('click', e => { if (briefClick(e, x => isOpenable(x) ? openDetail(x, true) : (closeDetail(), navGo(x, 'trace')))) e.preventDefault(); }); meta.appendChild(db);
   // Diagramm
   let model; try { model = viewDetail(el); } catch (e) { console.error(e); $('dVp').innerHTML = ''; return; }
   $('dBusy').hidden = false;
@@ -1839,7 +2076,7 @@ async function renderDetail(el) {
 function pickDetail(t) {
   const el = hitEl(t); const cur = findByKey(S.dstack[S.dstack.length - 1]);
   if (el) {
-    markSel($('dVp'), el);
+    setFocus(el); markFocus($('dVp'));
     if (isOpenable(el) && el !== cur) { openDetail(el, true); return; }
     const s = $('dSel'); s.innerHTML = '';
     const k = document.createElement('span'); k.className = 'kd'; k.textContent = kindLabel(el) || el.kind; s.appendChild(k);
@@ -1921,6 +2158,7 @@ function renderTree() {
   } else tree.appendChild(build(IDX.root.children, 0));
 }
 function navigateTo(el) {
+  setFocus(el);
   const up = pred => { for (let e = el; e; e = e.parent) if (pred(e)) return e; return null; };
   const st = stateCandidates(), ac = actionCandidates();
   if (S.mode === 'nav' && stageOf(el)) { navGo(el, 'trace'); return; }
@@ -2041,7 +2279,7 @@ let tt = null; function toast(m) { const t = $('toast'); t.textContent = m; t.hi
 /* ================= Navigator: Abdeckung, Rückverfolgung, Auswirkung ================= */
 const NAV = { tab: store.get('ntab') || 'cover', hist: [], idx: -1, depth: +(store.get('ndepth') || 2), gaps: false };
 try { const h = JSON.parse(store.get('nhist') || 'null'); if (h && Array.isArray(h.hist)) { NAV.hist = h.hist.slice(-30); NAV.idx = Math.min(h.idx, NAV.hist.length - 1); } } catch (e) {}
-const NTABS = [['cover', 'Abdeckung', 'Welche Anforderung ist umgesetzt und geprüft?'], ['trace', 'Rückverfolgung', 'Vom Fokus-Element zu allem, was daran hängt'], ['impact', 'Auswirkung', 'Was ist betroffen, wenn sich das Fokus-Element ändert?']];
+const NTABS = [['check', 'Modell-Check', 'Fehler, Lücken und Hinweise im Modell'], ['cover', 'Abdeckung', 'Welche Anforderung ist umgesetzt und geprüft?'], ['trace', 'Rückverfolgung', 'Vom Fokus-Element zu allem, was daran hängt'], ['impact', 'Auswirkung', 'Was ist betroffen, wenn sich das Fokus-Element ändert?']];
 const STATUS = { ok: ['vollständig', 'umgesetzt und verifiziert'], untested: ['ungeprüft', 'umgesetzt, aber kein Test'], unimpl: ['nicht umgesetzt', 'Test vorhanden, aber kein satisfy'], open: ['offen', 'weder umgesetzt noch geprüft'], group: ['Gruppe', 'fasst Unteranforderungen zusammen'] };
 const stIdx = id => STAGES.findIndex(s => s.id === id);
 
@@ -2049,6 +2287,7 @@ function setMode(m) {
   S.mode = m; store.set('mode', m);
   $('mNav').setAttribute('aria-selected', String(m === 'nav')); $('mDiag').setAttribute('aria-selected', String(m === 'diag'));
   $('navMode').hidden = m !== 'nav'; $('diagMode').hidden = m !== 'diag';
+  renderFocusBar();
   if (m === 'diag') { closeDetail(); requestAnimationFrame(() => update(true)); } else renderNav();
 }
 $('mNav').onclick = () => setMode('nav'); $('mDiag').onclick = () => setMode('diag');
@@ -2059,7 +2298,7 @@ function navGo(el, tab) {
   if (!el) return;
   const k = keyOf(el);
   if (NAV.hist[NAV.idx] !== k) { NAV.hist = NAV.hist.slice(0, NAV.idx + 1); NAV.hist.push(k); if (NAV.hist.length > 40) NAV.hist.shift(); NAV.idx = NAV.hist.length - 1; }
-  NAV.tab = tab || (NAV.tab === 'cover' ? 'trace' : NAV.tab);
+  NAV.tab = tab || (NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab);
   saveHist(); closeDetail();
   if (S.mode !== 'nav') setMode('nav'); else renderNav();
   $('nbody').scrollTop = 0;
@@ -2086,17 +2325,21 @@ $('nq').addEventListener('keydown', e => {
 });
 
 function renderNav() {
-  if (!IDXok || S.mode !== 'nav') return;
+  if (!IDXok) return;
+  renderFocusBar();
+  if (S.mode !== 'nav') return;
   const t = $('ntabs'); t.innerHTML = '';
   for (const [k, l, hint] of NTABS) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'vtab'; b.setAttribute('role', 'tab'); b.title = hint;
     b.setAttribute('aria-selected', String(NAV.tab === k)); b.textContent = l;
+    if (k === 'check') { const n = currentChecks().filter(i => i.sev !== 'hint').length; if (n) { const sp = document.createElement('span'); sp.className = 'n bad'; sp.textContent = n; b.appendChild(sp); } }
     b.onclick = () => { NAV.tab = k; saveHist(); renderNav(); }; t.appendChild(b);
   }
   $('nBack').disabled = NAV.idx <= 0; $('nFwd').disabled = NAV.idx >= NAV.hist.length - 1;
   renderTrail(); renderSearch();
   const body = $('nbody');
-  if (NAV.tab === 'cover') renderCover(body);
+  if (NAV.tab === 'check') renderCheck(body);
+  else if (NAV.tab === 'cover') renderCover(body);
   else if (NAV.tab === 'trace') renderTraceTab(body);
   else renderImpactTab(body);
 }
@@ -2167,7 +2410,6 @@ function card(el, o) {
     ${o.reason ? `<div class="why">${esc(o.reason)}</div>` : ''}
     ${short ? `<div class="cd">${esc(short)}</div>` : ''}
     ${o.path && o.path.length > 2 ? `<div class="cp">Weg: ${o.path.map(p => esc(p.name && !p.anon ? p.name : p.kind)).join(' › ')}</div>` : ''}
-    ${o.focus ? focusActions(el) : ''}
     ${ctx && !o.focus ? `<div class="cx">${esc(ctx)}</div>` : ''}
   </div>`;
 }
@@ -2269,10 +2511,267 @@ $('nbody').addEventListener('click', e => {
   const t = e.target.closest('[data-eid]'); if (!t) return;
   const el = elByEid(t.dataset.eid); if (!el) return;
   if (t.classList.contains('focus')) return;
-  navGo(el, NAV.tab === 'cover' ? 'trace' : NAV.tab === 'impact' ? 'trace' : NAV.tab);
+  navGo(el, 'trace');
 });
 $('nbody').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); e.target.click(); } });
 window.addEventListener('resize', () => drawLines(linePairs));
+
+
+/* ================= Lernhilfen: gemeinsamer Fokus, Steckbrief, Modell-Check, Notation ================= */
+
+/* ---------- Gemeinsamer Fokus ---------- */
+// Der Fokus ist der aktuelle Eintrag im Weg (NAV.hist). Navigator, Diagramme, Detail und Modellbaum teilen ihn.
+function setFocus(el, o) {
+  if (!el) return; o = o || {};
+  const k = keyOf(el);
+  if (NAV.hist[NAV.idx] !== k) { NAV.hist = NAV.hist.slice(0, NAV.idx + 1); NAV.hist.push(k); if (NAV.hist.length > 40) NAV.hist.shift(); NAV.idx = NAV.hist.length - 1; }
+  if (o.here) S.ctxFocus[S.view] = k; // Element ist im aktuellen Diagramm schon sichtbar: Kontext nicht wechseln
+  saveHist(); renderFocusBar();
+  if (S.mode === 'nav') renderNav(); else markFocus($('vp'));
+  if (VSC && S.follow && !S.revealing && el.file) VSC.postMessage({ type: 'goto', file: el.file, line: el.line, preserveFocus: true });
+}
+S.ctxFocus = {};
+function focusFamily(F) {
+  if (!F) return { self: [], rel: [] };
+  const rel = new Set([...trOut(F, 'typed'), ...trIn(F, 'typed')]);
+  if (F.kind === 'port' && F.parent) rel.add(F.parent);
+  return { self: [F], rel: [...rel].filter(x => x !== F) };
+}
+function markFocus(vp) {
+  if (!vp) return;
+  vp.querySelectorAll('.sel, .rel').forEach(n => n.classList.remove('sel', 'rel'));
+  const F = navFocus(); if (!F) return;
+  const fam = focusFamily(F);
+  for (const e of fam.rel) vp.querySelectorAll(`[data-eid="${e.eid}"]`).forEach(n => n.classList.add('rel'));
+  for (const e of fam.self) vp.querySelectorAll(`[data-eid="${e.eid}"]`).forEach(n => n.classList.add('sel'));
+}
+function inIBD(c, F, d) {
+  d = d || 0; if (d > 3 || !c) return false;
+  const ps = partsOf(c);
+  if (ps.includes(F) || portsOf(c).includes(F) || c.children.includes(F)) return true;
+  if (F.isDef && ps.some(p => p.types[0] && resolveDef(p.types[0], p) === F)) return true;
+  return ps.some(p => inIBD(p, F, d + 1));
+}
+function ctxFor(view, F, cands) {
+  const has = el => el && cands.find(c => c.el === el);
+  const def = !F.isDef && F.types[0] ? resolveDef(F.types[0], F) : null;
+  const up = list => { for (let e = F; e; e = e.parent) { const c = has(e); if (c) return c; } return null; };
+  let c = null;
+  if (view === 'ibd') c = cands.find(x => x.el && x.el !== F && inIBD(x.el, F)) || has(F) || has(def);
+  if (view === 'states' || view === 'actions') c = up() || has(def) || cands.find(x => x.el && F.isDef && trIn(F, 'typed').some(u => u.parent === x.el));
+  if (view === 'reqs') { const p = nearestPkg(F); c = (p && has(p)) || cands[0]; }
+  if (view === 'struct') {
+    const cur = cands.find(x => x.key === S.ctx.struct);
+    const inside = cur && (cur.key === '' || (cur.file ? cur.file === F.file : cur.el && within(cur.el).includes(F)));
+    c = inside ? cur : cands[0];
+  }
+  return c ? c.key : null;
+}
+function bestView(F) {
+  const st = stageOf(F);
+  if (F.kind === 'state') return 'states';
+  if (F.kind === 'action') return 'actions';
+  if (st === 'req') return 'reqs';
+  if (st === 'iface' && !F.isDef) return ibdCandidates().some(c => inIBD(c, F) || c === F.parent) ? 'ibd' : 'struct';
+  if (st === 'struct') { const ib = ibdCandidates(); if (ib.some(c => c !== F && inIBD(c, F)) || ib.includes(F)) return 'ibd'; }
+  return 'struct';
+}
+function showInDiagram(F) {
+  const v = bestView(F);
+  if (v === 'struct' && ['port', 'item', 'interface', 'connection', 'flow'].includes(F.kind)) { S.opts.ports = true; store.set('opts', JSON.stringify(S.opts)); }
+  S.view = v; store.set('view', v); delete S.ctxFocus[v];
+  closeDetail(); if (S.mode !== 'diag') setMode('diag'); else { renderTabs(); update(true); }
+  renderTabs();
+}
+
+/* ---------- Fokusleiste & Steckbrief ---------- */
+let briefOpen = store.get('brief') !== '0';
+function segHTML(v) {
+  return v.map(x => {
+    if (typeof x === 'string') return esc(x);
+    if (x.el) return `<button type="button" class="blink s-${stageOf(x.el) || 'x'}" data-eid="${x.el.eid}" data-tip-el="1">${esc(dispName(x.el))}</button>`;
+    if (x.go) return ` <button type="button" class="bact" data-go="${x.go}">${esc(x.label)}</button>`;
+    if (x.src) return `<button type="button" class="bact" data-src="1">${esc(x.label)}</button>`;
+    return '';
+  }).join('');
+}
+function briefHTML(el) {
+  let d; try { d = describe(el, NAV.depth); } catch (e) { console.error(e); return ''; }
+  return `<p class="blead">${segHTML(d.lead)}</p><dl class="brows">${d.rows.map(r => `<div class="${r.gap ? 'bgap' : ''}"><dt>${esc(r.k)}</dt><dd>${segHTML(r.v)}</dd></div>`).join('')}</dl>`;
+}
+function renderFocusBar() {
+  const bar = $('focusBar'), brief = $('brief');
+  const F = IDXok ? navFocus() : null;
+  if (!F) {
+    bar.innerHTML = `<span class="fb-empty">Kein Element im Fokus. Wähle eines in der Abdeckung, über die Suche, im Modellbaum oder durch Klick ins Diagramm.</span>`;
+    brief.hidden = true; return;
+  }
+  const st = stageOf(F);
+  bar.innerHTML = `<span class="fb-lab">Fokus</span>
+    <span class="fb-el s-${st || 'x'}"><span class="fb-k" data-tip-kind="${esc(kindLabel(F))}">${esc(kindLabel(F) || F.kind)}</span><b>${esc(dispName(F))}</b></span>
+    <span class="fb-acts">
+      <button type="button" class="fbb" data-fb="brief" aria-expanded="${briefOpen}">${briefOpen ? 'Steckbrief ausblenden' : 'Steckbrief'}</button>
+      ${st ? `<button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'trace' ? ' on' : ''}" data-fb="trace">Rückverfolgung</button><button type="button" class="fbb${S.mode === 'nav' && NAV.tab === 'impact' ? ' on' : ''}" data-fb="impact">Auswirkung</button>` : ''}
+      <button type="button" class="fbb${S.mode === 'diag' ? ' on' : ''}" data-fb="diag">Im Diagramm</button>
+      ${isOpenable(F) ? '<button type="button" class="fbb" data-fb="detail">Detaildiagramm</button>' : ''}
+      <button type="button" class="fbb" data-fb="src">Quelltext</button>
+    </span>`;
+  brief.hidden = !briefOpen;
+  if (briefOpen) brief.innerHTML = briefHTML(F);
+}
+$('focusBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-fb]'); if (!b) return; const F = navFocus(); if (!F) return;
+  const a = b.dataset.fb;
+  if (a === 'brief') { briefOpen = !briefOpen; store.set('brief', briefOpen ? '1' : '0'); renderFocusBar(); requestAnimationFrame(() => { if (S.mode === 'nav') drawLines(linePairs); else MV.fit(); }); }
+  if (a === 'trace' || a === 'impact') navGo(F, a);
+  if (a === 'diag') showInDiagram(F);
+  if (a === 'detail') openDetail(F, true);
+  if (a === 'src') gotoLine(F.file, F.line);
+});
+function briefClick(e, onEl) {
+  const t = e.target.closest('.blink, .bact'); if (!t) return false;
+  const F = navFocus();
+  if (t.dataset.eid) { const el = elByEid(t.dataset.eid); if (el) onEl(el); }
+  else if (t.dataset.go === 'impact' && F) navGo(F, 'impact');
+  else if (t.dataset.src && F) gotoLine(F.file, F.line);
+  return true;
+}
+$('brief').addEventListener('click', e => briefClick(e, el => { if (S.mode === 'nav') navGo(el, NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab); else setFocus(el); }));
+
+/* ---------- Modell-Check ---------- */
+const SEV = { error: ['Fehler', 'Das Modell ist an dieser Stelle falsch oder unvollständig verstanden.'], gap: ['Lücke', 'Etwas fehlt in der Kette Anforderung → Umsetzung → Nachweis.'], hint: ['Hinweis', 'Kein Fehler, aber eine Stelle, die einen zweiten Blick wert ist.'] };
+let checkCache = null;
+function currentChecks() { if (!checkCache) checkCache = modelChecks(parseRes ? parseRes.warns : []); return checkCache; }
+function renderCheck(body) {
+  const items = currentChecks();
+  const cnt = s => items.filter(i => i.sev === s).length;
+  if (!items.length) { body.innerHTML = `<div class="nempty"><h3>Keine Auffälligkeiten</h3><p>Der Modell-Check hat nichts gefunden: Jede Anforderung ist umgesetzt und geprüft, alle Verweise lösen sich auf, die Port-Richtungen passen.</p></div>`; return; }
+  const groups = Object.keys(RULES).map(r => ({ r, list: items.filter(i => i.rule === r) })).filter(g => g.list.length);
+  body.innerHTML = `<div class="cov-sum">
+      ${['error', 'gap', 'hint'].map(s => `<div class="tile sev-${s}" data-tip-sev="${s}"><b>${cnt(s)}</b><span>${SEV[s][0]}${cnt(s) === 1 ? '' : s === 'error' ? '' : s === 'gap' ? 'n' : 'e'}</span></div>`).join('')}
+    </div>
+    <p class="muted chk-intro">Der Check prüft, was ein Werkzeug ohne vollständigen SysML-Compiler sicher erkennen kann. Element anklicken: Rückverfolgung ab dort. Zeile anklicken: Quelltext.</p>
+    ${groups.map(g => `<details class="chk" open>
+      <summary><span class="pill sv-${RULES[g.r].sev}">${SEV[RULES[g.r].sev][0]}</span><b>${esc(RULES[g.r].title)}</b><span class="muted">${g.list.length}</span></summary>
+      <p class="why">${esc(RULES[g.r].why)}</p>
+      <ul>${g.list.map(i => `<li>
+        <div class="chk-l">${i.el && stageOf(i.el) ? `<button type="button" class="blink s-${stageOf(i.el)}" data-eid="${i.el.eid}">${esc(dispName(i.el))}</button>` : ''}<span>${esc(i.msg)}</span>${i.line ? `<button type="button" class="bact" data-file="${esc(i.file || '')}" data-line="${i.line}">${esc((S.files.length > 1 && i.file ? i.file + ', ' : '') + 'Zeile ' + i.line)}</button>` : ''}${i.ambig ? `<button type="button" class="bact" data-ambig="${esc(i.ambig)}">Auswahl treffen</button>` : ''}</div>
+        <div class="chk-fix"><code>${esc(i.fix)}</code><button type="button" class="cp-btn" data-copy="${esc(i.fix)}" title="Vorschlag kopieren">Kopieren</button></div>
+      </li>`).join('')}</ul>
+    </details>`).join('')}`;
+}
+$('nbody').addEventListener('click', e => {
+  const c = e.target.closest('[data-copy]');
+  if (c) { e.stopPropagation(); const t = c.dataset.copy; try { navigator.clipboard.writeText(t).then(() => toast('Vorschlag kopiert'), () => toast(t)); } catch (x) { toast(t); } return; }
+  const l = e.target.closest('.bact[data-line]'); if (l) { e.stopPropagation(); gotoLine(l.dataset.file || null, +l.dataset.line); return; }
+  const a = e.target.closest('[data-ambig]'); if (a) { e.stopPropagation(); openAmbig(a.dataset.ambig); return; }
+}, true);
+
+/* ---------- Notation erklären ---------- */
+const NOTE = {
+  'e-comp': ['Komposition', 'Das Ganze (Seite mit der gefüllten Raute) besteht aus dem Teil an der Pfeilspitze. Die Beschriftung nennt den Namen des Teils und ggf. die Anzahl.', 'part def Roboter { part akku : Akku; }'],
+  'e-spec': ['Spezialisierung :>', 'Das hohle Dreieck zeigt auf die allgemeinere Definition. Die andere erbt alle ihre Merkmale und kann eigene ergänzen.', 'part def Akku :> Komponente;'],
+  'e-typed': ['Typisierung / Verweis', 'Gestrichelt: Das Element ist vom Typ der Definition an der Pfeilspitze, oder es verweist darauf (z. B. exhibit, perform, subject).', 'port ausgang : EnergiePort;'],
+  'e-defby': ['Usage und Definition', 'Verbindet eine konkrete Verwendung (abgerundet) mit ihrem Bauplan (eckig, am Dreieck).', 'part roboter : Roboter;'],
+  'e-conn': ['Verbindung (connect)', 'Zwei Ports oder Teile sind verbunden. Eine Linie ohne Pfeil sagt nichts über eine Flussrichtung.', 'connect lidar.scanAus to rechner.scanEin;'],
+  'e-iface': ['Schnittstelle (interface)', 'Dicke Linie: eine Verbindung, deren Art eine interface def festlegt. Die Beschriftung nennt diesen Typ.', 'interface : Versorgung connect akku.ausgang to rechner.energie;'],
+  'e-flow': ['Fluss (flow)', 'Etwas fließt in Pfeilrichtung von einem Ausgang zu einem Eingang: Daten, Energie oder Material. Die Beschriftung nennt, was fließt.', 'flow of Fahrbefehl from rechner.fahrAus to antrieb.fahrEin;'],
+  'e-bind': ['Bindung (bind)', 'Beide Seiten haben immer denselben Wert.', 'bind a.x = b.y;'],
+  'e-trans': ['Transition', 'Wechsel von einem Zustand in den nächsten. Beschriftung: Auslöser [Bedingung] / Wirkung.', 'accept StartBefehl then Navigation;'],
+  'e-succ': ['Nachfolge (then)', 'Der Schritt an der Pfeilspitze beginnt, wenn der vorige fertig ist. [ … ] ist die Bedingung einer Verzweigung.', 'first lokalisieren then pfadPlanen;'],
+  'e-satisfy': ['satisfy – erfüllt', 'Die Komponente erfüllt die Anforderung an der Pfeilspitze. Diese Beziehung ist der Kern der Rückverfolgung.', 'satisfy laufzeit by roboter.akku;'],
+  'e-contain': ['enthält', 'Die Anforderung mit dem Kreis-Plus fasst die andere als Unteranforderung zusammen.', 'requirement r { requirement a : A; }'],
+  'e-inner': ['besteht aus', 'Führt zur inneren Struktur: welche Teile darin stecken und wie sie verbunden sind.', ''],
+  'def': ['Definition (eckige Ecken)', 'Ein Bauplan, z. B. part def. Eine Definition beschreibt, wie etwas aufgebaut ist – im System steckt sie erst, wenn sie verwendet wird.', 'part def Akku { … }'],
+  'usage': ['Usage (abgerundete Ecken)', 'Eine konkrete Verwendung einer Definition in einem bestimmten Zusammenhang, z. B. der Akku im Roboter.', 'part akku : Akku;'],
+  'frame': ['Rahmen: innere Struktur', 'Alles im Rahmen gehört zu diesem Element. Ports auf dem Rand sind seine Anschlüsse nach außen.', ''],
+  'file': ['Datei', 'Rahmen um alle Definitionen aus einer .sysml-Datei.', ''],
+  'collapsed': ['Gestrichelter Rand', 'Dieses Teil enthält weitere Teile, die bei der gewählten Tiefe ausgeblendet sind. Tiefe oben erhöhen oder das Teil anklicken.', ''],
+  'inherited': ['^ geerbt', 'Das Merkmal ist nicht hier festgelegt, sondern in einer allgemeineren Definition – es wird geerbt.', 'part def Akku :> Komponente;  // erbt masse'],
+  'redef': [':>> Redefinition', 'Ein geerbtes Merkmal wird hier neu festgelegt, z. B. mit einem eigenen Wert.', ':>> masse = 0.35;'],
+  'feature': ['Merkmal', 'Schreibweise: Name : Typ [Anzahl] = Wert. Der Typ verweist auf eine Definition.', 'attribute kapazitaet : Real = 5.2;'],
+  'init': ['Startpunkt', 'Hier beginnt der Ablauf bzw. die Zustandsmaschine.', 'entry; then Bereit;   bzw.   first start;'],
+  'final': ['Ende', 'Der Ablauf ist abgeschlossen.', 'then done;'],
+  'decide': ['Entscheidung / Zusammenführung', 'Raute: Der Ablauf verzweigt nach Bedingungen [ … ] oder läuft wieder zusammen.', 'decide; if ok then done; else lokalisieren;'],
+  'fork': ['Gabelung / Vereinigung', 'Balken: Mehrere Schritte laufen parallel bzw. warten aufeinander.', 'fork; then a; then b;'],
+  'amb': ['Name mehrfach definiert', 'Es gibt mehrere Definitionen mit diesem Namen. Unqualifizierte Verweise sind dann mehrdeutig – im Modell besser Paket::Name schreiben.', 'part m : Struktur::Motor;'],
+  'port-generic': ['Port (Anschluss)', 'Das Quadrat auf dem Rand ist ein Anschluss. Das Dreieck darin zeigt die Richtung: in das Teil hinein (in) oder heraus (out). Ohne Dreieck ist die Richtung offen.', 'port ausgang : ~EnergiePort;'],
+  'c-attributes': ['attributes', 'Eigenschaften mit Typ und ggf. Wert, z. B. Masse oder Kapazität.', 'attribute masse : Masse;'],
+  'c-ports': ['ports', 'Die Anschlüsse dieses Elements.', 'port energie : EnergiePort;'],
+  'c-parts': ['parts', 'Die Teile, aus denen dieses Element besteht.', 'part motor : Motor[2];'],
+  'c-directed features': ['directed features', 'Merkmale mit Richtung: in = kommt herein, out = geht hinaus. Typisch in port def und Aktionen.', 'out item cmd : Fahrbefehl;'],
+  'c-ends': ['ends', 'Die beiden Enden einer Verbindungsart – welche Port-Typen sie verbindet.', 'end quelle : ~EnergiePort;'],
+  'c-actions': ['actions', 'Abläufe, die dieses Element ausführt.', 'perform action navigation : NavigiereZumZiel;'],
+  'c-states': ['states', 'Zustandsverhalten, das dieses Element zeigt.', 'exhibit state betrieb : Betriebszustaende;'],
+  'c-constraints': ['constraints', 'Bedingungen, die gelten müssen.', 'require constraint { laufzeit >= 2 }'],
+  'c-literals': ['literals', 'Die festen Werte einer Aufzählung.', 'enum def Farbe { rot; gruen; }'],
+  'r-satisfy': ['erfüllt', 'satisfy: Eine Komponente setzt eine Anforderung um.', 'satisfy laufzeit by roboter.akku;'],
+  'r-verify': ['verifiziert / prüft', 'verify: Ein Test weist nach, dass eine Anforderung erfüllt ist.', 'objective { verify laufzeit; }'],
+  'r-derive': ['abgeleitet', 'derivation: Eine Anforderung folgt aus einer anderen.', '#derivation connection { end #original ::> a; end #derive ::> b; }'],
+  'r-refine': ['verfeinert', 'refinement: Ein Element beschreibt ein anderes genauer.', '#refinement dependency from a to b;'],
+  'r-allocate': ['alloziert', 'allocate: Etwas Logisches (z. B. ein Ablauf) wird etwas Physischem (z. B. einem Rechner) zugeordnet.', 'allocate NavigiereZumZiel to roboter.rechner;'],
+  'r-owns': ['Teil von / enthält', 'Komposition: Das Element gehört zu einem größeren Ganzen bzw. enthält kleinere Teile.', 'part def Roboter { part akku : Akku; }'],
+  'r-typed': ['Definition / Usage', 'Typisierung: die Verbindung zwischen Bauplan (Definition) und konkreter Verwendung (Usage).', 'part akku : Akku;'],
+  'r-spec': ['spezialisiert', 'Spezialisierung :> – erbt alle Merkmale der allgemeineren Definition.', 'part def Akku :> Komponente;'],
+  'r-connect': ['verbunden / Gegenstelle', 'Zwei Teile sind über Ports verbunden; die Klammer nennt Schnittstelle und Ports.', 'interface : Versorgung connect akku.ausgang to rechner.energie;'],
+  'r-port': ['Port', 'Ein Anschluss der Komponente.', 'port ausgang : ~EnergiePort;'],
+  'r-perform': ['führt aus / zeigt', 'perform bzw. exhibit: Die Komponente führt einen Ablauf aus bzw. zeigt ein Zustandsverhalten.', 'perform action navigation : NavigiereZumZiel;'],
+  'r-subject': ['Gegenstand / Prüfling', 'subject: Worauf sich eine Anforderung oder ein Test bezieht.', 'subject pruefling : Roboter;'],
+  'r-flow': ['liefert / erhält', 'flow: Etwas fließt von einem Ausgang zu einem Eingang.', 'flow of Scan from lidar.scanAus to rechner.scanEin;'],
+};
+const REL_TIP = [[/erfüllt|setzt .* um|Umsetzung/, 'r-satisfy'], [/verifiziert|prüft|Test/, 'r-verify'], [/abgeleitet/, 'r-derive'], [/verfeinert/, 'r-refine'], [/alloziert|Darauf läuft/, 'r-allocate'], [/Teil von|enthält|gehört zu/, 'r-owns'], [/Definition|Usage|vom Typ/, 'r-typed'], [/spezialisiert/, 'r-spec'], [/Gegenstelle|verbunden|Partner|Verbindung an|Ende von/, 'r-connect'], [/Port/, 'r-port'], [/führt aus|ausgeführt|zeigt|gezeigt/, 'r-perform'], [/Gegenstand|testet|Prüfling|betrifft/, 'r-subject'], [/liefert|erhält/, 'r-flow']];
+const kindTip = k => { const t = KIND_PLAIN[k]; return t ? ['«' + k + '»', t.charAt(0).toUpperCase() + t.slice(1) + '.', ''] : null; };
+function tipFor(t) {
+  if (!t || !t.closest) return null;
+  const d = t.closest('[data-tip]'); if (d) return NOTE[d.dataset.tip] || null;
+  const k = t.closest('[data-tip-kind]'); if (k) return kindTip(k.dataset.tipKind);
+  const sv = t.closest('[data-tip-sev]'); if (sv) return [SEV[sv.dataset.tipSev][0], SEV[sv.dataset.tipSev][1], ''];
+  const pill = t.closest('.pill'); if (pill) { const m = pill.className.match(/p-(\w+)/); if (m && STATUS[m[1]]) return ['Status: ' + STATUS[m[1]][0], STATUS[m[1]][1] + '.', '']; const s2 = pill.className.match(/sv-(\w+)/); if (s2) return [SEV[s2[1]][0], SEV[s2[1]][1], '']; }
+  const rl = t.closest('.rl, dt'); if (rl) { for (const [re, key] of REL_TIP) if (re.test(rl.textContent)) return NOTE[key]; }
+  const ck = t.closest('.card .ck > span:first-child'); if (ck) return kindTip(ck.textContent.trim());
+  if (!t.closest('.dg')) return null;
+  if (t.closest('.ambm')) return NOTE.amb;
+  const port = t.closest('g.port');
+  if (port) { const el = elByEid(port.dataset.eid); if (!el) return NOTE['port-generic']; const dir = portDir(el); return ['Port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : ''), (dir ? 'Richtung: ' + DIR_PLAIN[dir] + '. ' : 'Richtung offen. ') + (el.types[0] && el.types[0].startsWith('~') ? 'Das ~ heißt konjugiert: Die Richtungen des Port-Typs sind umgedreht. ' : '') + 'Das Dreieck im Quadrat zeigt die Richtung.', 'port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : '') + ';']; }
+  const cls = (t.getAttribute && t.getAttribute('class')) || '';
+  let m = cls.match(/\be-(\w+)/) || cls.match(/\bel-(\w+)/); if (m && NOTE['e-' + m[1]]) return NOTE['e-' + m[1]];
+  if (/\bst\b/.test(cls)) { const kw = t.textContent.replace(/[«»]/g, '').trim(); return kindTip(kw) || (kw === 'Datei' ? NOTE.file : null); }
+  if (/\bct\b/.test(cls) && !/\bdc\b/.test(cls)) return NOTE['c-' + t.textContent.trim()] || null;
+  if (/\bln\b/.test(cls)) { const s = t.textContent.trim(); return s.startsWith('^') ? NOTE.inherited : s.includes(':>>') ? NOTE.redef : NOTE.feature; }
+  const nd = t.closest('g.nd'); if (!nd) return null;
+  if (nd.dataset.pseudo === 'init') return NOTE.init;
+  if (nd.dataset.pseudo === 'final') return NOTE.final;
+  if (nd.dataset.shape === 'diamond') return NOTE.decide;
+  if (nd.dataset.shape === 'bar') return NOTE.fork;
+  if (nd.classList.contains('k-file')) return NOTE.file;
+  if (nd.classList.contains('collapsed')) return NOTE.collapsed;
+  if (/\bnm\b/.test(cls) || /\bnb\b/.test(cls)) { if (/\bframe\b/.test(cls)) return NOTE.frame; return nd.dataset.usage ? NOTE.usage : NOTE.def; }
+  return null;
+}
+let tipsOn = store.get('tips') !== '0', tipTimer = null, tipTarget = null;
+$('tipsOn').checked = tipsOn;
+$('tipsOn').onchange = e => { tipsOn = e.target.checked; store.set('tips', tipsOn ? '1' : '0'); hideTip(); };
+function hideTip() { clearTimeout(tipTimer); tipTarget = null; $('tip').hidden = true; }
+function showTip(x, y, n) {
+  const tip = $('tip');
+  tip.innerHTML = `<b>${esc(n[0])}</b><span>${esc(n[1])}</span>${n[2] ? `<code>${esc(n[2])}</code>` : ''}`;
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+  tip.style.left = Math.max(8, Math.min(x + 14, W - w - 8)) + 'px';
+  tip.style.top = (y + 18 + h > H - 8 ? Math.max(8, y - h - 10) : y + 18) + 'px';
+}
+document.addEventListener('pointerover', e => {
+  if (!tipsOn || e.pointerType === 'touch') return;
+  const n = tipFor(e.target);
+  if (!n) { hideTip(); return; }
+  if (tipTarget === e.target) return;
+  hideTip(); tipTarget = e.target;
+  const x = e.clientX, y = e.clientY;
+  tipTimer = setTimeout(() => showTip(x, y, n), 380);
+});
+document.addEventListener('pointerdown', hideTip, true);
+document.addEventListener('wheel', hideTip, { passive: true, capture: true });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
 
 /* ---------- VS Code ---------- */
 const EMPTY_WS = [{ name: '(keine Modelldateien)', text: '// Im geöffneten Workspace wurden keine .sysml- oder .kerml-Dateien gefunden.\n' }];
