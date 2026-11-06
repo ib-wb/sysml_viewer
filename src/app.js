@@ -23,7 +23,7 @@ function applyStatic() {
   for (const el of document.querySelectorAll('[data-i18n-title]')) el.title = L(el.dataset.i18nTitle);
   for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', L(el.dataset.i18nAria));
   for (const el of document.querySelectorAll('[data-i18n-ph]')) el.placeholder = L(el.dataset.i18nPh);
-  if (S.brand) document.querySelector('.brand p').textContent = S.brand();
+  if (S.brand) { const bp = document.querySelector('.brand p'); bp.textContent = bp.title = S.brand(); }
   const sel = $('langSel');
   if (sel && !sel.options.length) sel.innerHTML = Object.keys(I18N).sort().map(c => `<option value="${c}">${esc(I18N[c]._name || c)}</option>`).join('');
   if (sel) sel.value = LANG;

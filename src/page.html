@@ -40,11 +40,13 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-
 button, select, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 12px 10px; }
-.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: nowrap; padding-block: 12px 10px; }
+.brand { display: flex; flex-direction: row-reverse; justify-content: flex-start; align-items: baseline; gap: 10px; min-width: min-content; flex: 1 1 0; text-align: right; }
 .brand h1 { font-family: var(--f-cond); font-weight: 600; font-size: 19px; letter-spacing: .01em; margin: 0; white-space: nowrap; }
 .brand h1 b { color: var(--accent); font-weight: 600; }
-.brand p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.brand p { margin: 0; color: var(--muted); font-size: 12.5px; width: 0; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acts { flex: 0 1 auto; min-width: 0; }
+.brand h1 { flex-shrink: 0; }
 .acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line);
   background: var(--raise); cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
@@ -311,12 +313,16 @@ table.cov .mono { font-family: var(--f-mono); font-size: 11.5px; white-space: no
 body.nosrc .work { grid-template-columns: minmax(0, 1fr); }
 body.nosrc .pane.src { display: none; }
 
+@media (min-width: 861px) and (max-width: 1200px) { .brand p { display: none; } }
 @media (max-width: 860px) {
   html, body { height: auto; }
   .work { grid-template-columns: minmax(0, 1fr); }
   .pane.src { height: 46vh; }
   .pane.view { height: 78vh; }
-  .brand { flex-direction: column; gap: 2px; }
+  .top { flex-wrap: wrap; }
+  .acts { flex: 1 1 auto; }
+  .brand { flex-direction: column; align-items: flex-start; gap: 2px; order: -1; flex-basis: 100%; text-align: left; min-width: 0; }
+  .brand p { white-space: normal; width: auto; flex: none; }
   .sgrid { grid-template-columns: minmax(0, 1fr); min-width: 0; }
   .lines { display: none; }
   .modehint { display: none; }
@@ -331,10 +337,6 @@ body.nosrc .pane.src { display: none; }
 </style>
 
 <header class="top">
-  <div class="brand">
-    <h1>SysML <b>v2</b> Viewer</h1>
-    <p data-i18n="ui.brand">Ganzen Projektordner einlesen, Übersicht nach Dateien, Klick auf einen Part zeigt die Details. Alles läuft im Browser.</p>
-  </div>
   <div class="acts">
     <label class="btn" for="file" tabindex="0" id="fileBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 1.8h5.5L12.5 5v9.2H4z M9.5 1.8V5h3"/></svg><span data-i18n="ui.btn.files">Dateien</span></label>
     <input type="file" id="file" accept=".sysml,.kerml,.txt,text/plain" multiple hidden>
@@ -344,6 +346,10 @@ body.nosrc .pane.src { display: none; }
     <button class="btn" id="sampleBtn" type="button" data-i18n="ui.btn.sample">Beispielprojekt</button>
     <button class="btn" id="srcToggle" type="button" aria-pressed="false" data-i18n="ui.src.hide">Quelltext ausblenden</button>
     <select id="langSel" class="langsel" aria-label="Sprache" data-i18n-aria="ui.language" data-i18n-title="ui.language" title="Sprache"></select>
+  </div>
+  <div class="brand">
+    <h1>SysML <b>v2</b> Viewer</h1>
+    <p data-i18n="ui.brand" data-i18n-title="ui.brand">Ganzen Projektordner einlesen, Übersicht nach Dateien, Klick auf einen Part zeigt die Details. Alles läuft im Browser.</p>
   </div>
 </header>
 
