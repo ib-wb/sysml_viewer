@@ -22,6 +22,7 @@ function focusFamily(F) {
 function markFocus(vp) {
   if (!vp) return;
   vp.querySelectorAll('.sel, .rel').forEach(n => n.classList.remove('sel', 'rel'));
+  markExtras(vp);
   const F = navFocus(); if (!F) return;
   const fam = focusFamily(F);
   for (const e of fam.rel) vp.querySelectorAll(`[data-eid="${e.eid}"]`).forEach(n => n.classList.add('rel'));
@@ -119,7 +120,7 @@ function briefClick(e, onEl) {
   else if (t.dataset.src && F) gotoLine(F.file, F.line);
   return true;
 }
-$('brief').addEventListener('click', e => briefClick(e, el => { if (S.mode === 'nav') navGo(el, NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab); else setFocus(el); }));
+$('brief').addEventListener('click', e => briefClick(e, el => { if (S.mode === 'nav') navGo(el); else setFocus(el); }));
 
 /* ---------- Modell-Check ---------- */
 const SEV = Object.fromEntries(['error', 'gap', 'hint'].map(k => [k, { get 0() { return L('sev.' + k); }, get 1() { return L('sev.' + k + '.hint'); } }]));

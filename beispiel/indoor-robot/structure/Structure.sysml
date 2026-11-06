@@ -2,6 +2,8 @@
 private import ScalarValues::*;
 
 package Structure {
+    private import Disciplines::*;
+
     attribute def Voltage :> Real;
     attribute def Mass :> Real;
 
@@ -29,28 +31,28 @@ package Structure {
     abstract part def Component {
         attribute mass : Mass;
     }
-    part def Battery :> Component {
+    #Electronics part def Battery :> Component {
         attribute capacity : Real = 5.2;
         port output : ~PowerPort;
     }
-    part def Controller :> Component {
+    #Electronics part def Controller :> Component {
         doc /* Raspberry Pi 5 running ROS 2 Jazzy */
         perform action navigation : Behaviour::NavigateToGoal;
         port power : PowerPort;
         port scanIn : ~ScanPort;
         port driveOut : CommandPort;
     }
-    part def Lidar :> Component {
+    #Electronics part def Lidar :> Component {
         port power : PowerPort;
         port scanOut : ScanPort;
     }
-    part def Motor :> Component {
+    #Electronics part def Motor :> Component {
         attribute ratedSpeed : Real;
     }
-    part def Wheel {
+    #Mechanics part def Wheel {
         attribute diameter : Real = 0.065;
     }
-    part def Drive {
+    #Mechanics part def Drive {
         port power : PowerPort;
         port driveIn : ~CommandPort;
         part motorLeft : Motor;

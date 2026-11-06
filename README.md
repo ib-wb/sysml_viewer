@@ -16,14 +16,18 @@ Begleitwerkzeug zum Lehrbuch *SysML v2, MBSE und ROS2 für Einsteiger* (Wolfgang
 
 | Sicht | Inhalt |
 |---|---|
+| Start | Modell in Zahlen und Einstiegsfragen („Welche Anforderungen sind offen?“, „Was ist betroffen, wenn ich ein Teil ändere?“ …), die direkt in die passende Sicht führen |
 | Abdeckung | Matrix Anforderung → umgesetzt durch (`satisfy`) → verifiziert durch (`verify`), Lücken rot markiert |
 | Rückverfolgung | Fokus-Element mit Spalten Anforderungen · Struktur · Schnittstellen · Verhalten · Nachweis; Klick verschiebt den Fokus, „Dein Weg“ führt zurück |
 | Auswirkung | Was ist bei einer Änderung betroffen – mit Reichweite, Begründung und Weg je Element |
+| Disziplinen | Was zu Mechanik, Elektronik, Software … gehört, welche Anforderungen jede Disziplin erfüllt, Schnittstellen über Disziplingrenzen und Software-auf-Hardware-Zuordnungen; Diagramme lassen sich nach Disziplin einfärben |
+| Vergleich | Unterschiede zu einer Baseline (gemerkter Stand, Ordner, Dateien oder – in VS Code – der letzte Git-Commit): neue, entfernte und geänderte Elemente, neu nachzuweisende Anforderungen, zu wiederholende Tests, Abdeckung und Modell-Check vorher/nachher; Markierung in den Diagrammen |
 
 **Lernhilfen**
 
 | Funktion | Was sie tut |
 |---|---|
+| Geführte Tour | Geht an einem Beispiel aus dem geladenen Modell den Entwicklungsweg entlang: Anforderung → Umsetzung → Schnittstelle → Verhalten → Test → Abdeckung → Auswirkung – mit Hervorhebung und dem passenden Quelltext |
 | Fokus | Ein Element bleibt über Navigator, Diagramme, Detailansicht und Modellbaum hinweg ausgewählt; Diagramme wählen automatisch einen Kontext, in dem es vorkommt, und heben es hervor |
 | Steckbrief | Beschreibt das Fokus-Element in Klartext: was es ist, woraus es besteht, womit es verbunden ist, welche Anforderung es erfüllt, welcher Test es prüft, was eine Änderung betrifft – Lücken rot |
 | Modell-Check | Fehler (tote Verweise, unbekannte Typen, unpassende Port-Richtungen), Lücken (Anforderung ohne Umsetzung oder Test, Test ohne Anforderung) und Hinweise (offene Ports, Komponenten ohne Anforderung, unbenutzte Definitionen) – jeweils mit Begründung, Sprung und Code-Vorschlag |
@@ -62,6 +66,24 @@ Der Navigator folgt nur Beziehungen, die modelliert sind:
 | Ableitung | `#derivation connection { end #original ::> a; end #derive ::> b; }` |
 | Allokation | `allocate NavigiereZumZiel to roboter.rechner;` |
 
+## Disziplinen im Modell
+
+Disziplinen sind gewöhnliche Metadaten. Der Viewer kennt keine festen Namen – jede `metadata def`, die im Modell angewendet wird, ist eine Disziplin:
+
+```
+package Disziplinen {
+    metadata def Mechanik;
+    metadata def Elektronik;
+    metadata def Software;
+}
+#Mechanik part def Rad { … }          // als Präfix
+part def Akku { @Elektronik; }        // oder im Rumpf
+```
+
+Verwendungen erben die Disziplin ihrer Definition, Definitionen die ihrer allgemeineren Definition. Hat ein Element mehrere, zählt die erste.
+
+## Beispielprojekt
+
 Ein vollständiges Beispiel mit zwei absichtlichen Lücken liegt in `beispiel/indoorroboter/`, inhaltsgleich auf Englisch in `beispiel/indoor-robot/`. Der Viewer zeigt das Beispiel in der eingestellten Sprache; ein Sprachwechsel tauscht es aus, solange du es nicht bearbeitet hast.
 
 ## Grenzen
@@ -94,13 +116,14 @@ src/                 Quellen des Viewers
   app.js             Oberfläche, Dateien, Diagramm-Modus, VS-Code-Anbindung
   nav.js             Navigator: Abdeckung, Rückverfolgung, Auswirkung
   learn.js           Lernhilfen: gemeinsamer Fokus, Steckbrief, Modell-Check, Notationserklärungen
+  guide.js           Einstieg: Startseite, geführte Tour, Disziplinen, Baseline-Vergleich
   page.html          Seitengerüst und Styles
   diag.css           Styles der Diagramme (auch für SVG-Export)
   lang/              Oberflächentexte je Sprache: de.json (Basis), en.json, …
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
-beispiel/            Beispielprojekt Indoorroboter, je 5 Dateien: indoorroboter/ (de), indoor-robot/ (en)
+beispiel/            Beispielprojekt Indoorroboter, je 6 Dateien: indoorroboter/ (de), indoor-robot/ (en)
 tests/               Parser-, Traceability-, Steckbrief-, Check- und Sprachtests; Test der Erweiterung gegen ein VS-Code-Mock
   fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
 ```

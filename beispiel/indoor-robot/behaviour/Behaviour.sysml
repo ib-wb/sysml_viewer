@@ -2,10 +2,12 @@
 private import ScalarValues::*;
 
 package Behaviour {
+    private import Disciplines::*;
+
     item def Pose;
     item def Path;
 
-    state def OperatingStates {
+    #Software state def OperatingStates {
         entry; then Ready;
 
         state Ready;
@@ -31,7 +33,7 @@ package Behaviour {
         transition first Charging accept BatteryFull then Ready;
     }
 
-    action def NavigateToGoal {
+    #Software action def NavigateToGoal {
         in item goal : Pose;
         out item reached : Boolean;
 

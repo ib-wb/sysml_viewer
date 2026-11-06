@@ -1,12 +1,12 @@
 {
   "name": "sysml-viewer",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Navigator und Diagramme für SysML-v2-Textmodelle – im Browser und als VS-Code-Erweiterung",
   "author": "Wolfgang Becker (ib-wb.de)",
   "scripts": {
     "build": "python3 tools/build.py",
-    "test": "python3 tools/build.py && node tests/parser.test.js && node tests/i18n.test.js && node tests/extension.test.js",
+    "test": "python3 tools/build.py && node tests/parser.test.js && node tests/i18n.test.js && node tests/guide.test.js && node tests/extension.test.js",
     "package": "npm run build && cd vscode-extension && vsce package --baseContentUrl https://github.com/ib-wb/sysml_viewer/blob/main/vscode-extension --baseImagesUrl https://github.com/ib-wb/sysml_viewer/raw/main/vscode-extension --no-dependencies --out ../dist/"
   },
   "devDependencies": {

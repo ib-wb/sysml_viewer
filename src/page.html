@@ -221,7 +221,7 @@ details.chk li { border-top: 1px solid var(--line); padding-top: 6px; display: f
 .modehint { font-size: 12px; color: var(--muted); min-width: 0; }
 .navmode, .diagmode { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .nbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-.nsearch { flex: 1 1 220px; min-width: 0; }
+.nsearch { flex: 1 1 150px; min-width: 0; }
 .nsearch input { width: 100%; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); padding: 0 10px; font-size: 13px; }
 .nhist { display: flex; gap: 4px; }
 .trail { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; min-height: 36px; }
@@ -334,6 +334,60 @@ body.nosrc .pane.src { display: none; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 /*DIAGCSS*/
+/* ---------- Startseite, Disziplinen, Vergleich, Tour ---------- */
+:root { --d0: #B4531A; --d1: #2B7A49; --d2: #6A44B8; --d3: #0E7C8B; --d4: #A2336A; --d5: #6B7280; --add: #2B7A49; --chg: #B86A00; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --d0: #EE9658; --d1: #6CC08F; --d2: #B39CF0; --d3: #5CC6D3; --d4: #EE8BB8; --d5: #A6AEBB; --add: #6CC08F; --chg: #E7AE58; } }
+:root[data-theme="dark"] { --d0: #EE9658; --d1: #6CC08F; --d2: #B39CF0; --d3: #5CC6D3; --d4: #EE8BB8; --d5: #A6AEBB; --add: #6CC08F; --chg: #E7AE58; }
+.sh { font-family: var(--f-cond); font-size: 15.5px; font-weight: 600; margin: 18px 0 8px; }
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.qcard { background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.qcard.lead { border-color: var(--accent); background: var(--accent-soft); }
+.qcard b { font-family: var(--f-cond); font-size: 15px; font-weight: 600; line-height: 1.3; }
+.qcard > span { color: var(--muted); font-size: 12.5px; line-height: 1.45; flex: 1; }
+.qact { display: flex; gap: 6px; align-items: center; margin-top: 4px; min-width: 0; }
+.qact select { flex: 1 1 auto; min-width: 0; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); font-size: 12.5px; }
+.qact .btn { flex: 0 0 auto; }
+.ddot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: 0 0 auto; margin-right: 6px; vertical-align: -1px; }
+.ddot.dc-0 { background: var(--d0); } .ddot.dc-1 { background: var(--d1); } .ddot.dc-2 { background: var(--d2); } .ddot.dc-3 { background: var(--d3); } .ddot.dc-4 { background: var(--d4); } .ddot.dc-5 { background: var(--d5); }
+.dleg { display: inline-flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; }
+.dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.dcol { background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.dcol header { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.dcol header b { font-family: var(--f-cond); font-size: 14.5px; flex: 1; }
+.dlist, .dreq { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.dreq { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 12px; }
+.dx, .dfl, .dfr { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dx li, .dfi { background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.dside { display: inline-flex; align-items: center; gap: 2px; min-width: 0; }
+.dvia { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.dx .bact, .dfi .bact { margin-left: auto; }
+.dhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.dbtns { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.dhead .dbtns { margin: 0; }
+.pill.dp-add { background: var(--ok-soft); color: var(--add); } .pill.dp-del { background: var(--bad-soft); color: var(--bad); } .pill.dp-chg { background: var(--warn-soft); color: var(--chg); }
+.dff { flex-basis: 100%; margin: 2px 0 0; padding-left: 18px; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+.dff del { color: var(--bad); text-decoration: line-through; font-family: var(--f-mono); font-size: 12px; } .dff ins { color: var(--add); text-decoration: none; font-family: var(--f-mono); font-size: 12px; }
+.dfr li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 12.5px; }
+.dgrid.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.tile b.c-add { color: var(--add); } .tile b.c-del { color: var(--bad); } .tile b.c-chg { color: var(--chg); }
+.vtab .n.chg { background: var(--chg); color: var(--bg); border-radius: 99px; padding: 0 6px; opacity: 1; font-weight: 600; }
+.mono { font-family: var(--f-mono); font-size: 11.5px; }
+/* Markierungen im Diagramm */
+.dg .dc > .nb { stroke-width: 3; } .dg .dc-0 > .nb { stroke: var(--d0); } .dg .dc-1 > .nb { stroke: var(--d1); } .dg .dc-2 > .nb { stroke: var(--d2); } .dg .dc-3 > .nb { stroke: var(--d3); } .dg .dc-4 > .nb { stroke: var(--d4); } .dg .dc-5 > .nb { stroke: var(--d5); }
+.dg .df-add > .nb, .dg .df-add > .pt { stroke: var(--add); stroke-width: 3.2; } .dg .df-chg > .nb, .dg .df-chg > .pt { stroke: var(--chg); stroke-width: 3.2; stroke-dasharray: 7 3; }
+/* Tour */
+.tour { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 16px; width: min(380px, calc(100vw - 32px)); z-index: 60; background: var(--raise); color: var(--ink); border: 1px solid var(--accent); border-radius: 10px; box-shadow: 0 10px 34px rgba(0,0,0,.22); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.tour .th { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.tour .tx { border: 0; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px 6px; }
+.tour > b { font-family: var(--f-cond); font-size: 16px; font-weight: 600; line-height: 1.3; }
+.tour p { margin: 0; font-size: 13px; line-height: 1.5; }
+.tour code { font: 11.5px/1.45 var(--f-mono); background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 5px 7px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tour .tb { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.tdots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; } .tdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); } .tdots i.on { background: var(--accent); }
+.tour-hl { outline: 3px solid var(--accent) !important; outline-offset: 3px; border-radius: 8px; animation: tourpulse 1.4s ease-in-out 2; }
+@keyframes tourpulse { 50% { outline-offset: 7px; } }
+@media (prefers-reduced-motion: reduce) { .tour-hl { animation: none; } }
+@media (max-width: 860px) { .tour { left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 52vh; overflow: auto; } }
 </style>
 
 <header class="top">

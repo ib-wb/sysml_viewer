@@ -10,6 +10,9 @@ Navigator und Diagramme für SysML-v2-Textmodelle direkt in VS Code. Der Viewer 
 - **Abdeckung** – welche Anforderung von welcher Komponente erfüllt (`satisfy`) und von welchem Test verifiziert (`verify`) wird. Lücken sind rot markiert.
 - **Rückverfolgung** – ein Element im Fokus, daneben alles, was daran hängt: Anforderungen, Struktur, Schnittstellen, Verhalten, Nachweis. Klick verschiebt den Fokus, „Dein Weg“ führt zurück.
 - **Auswirkung** – was betroffen ist, wenn sich ein Element ändert, mit Begründung und Weg.
+- **Start** – Einstiegsfragen und eine geführte Tour durch das eigene Modell.
+- **Disziplinen** – Mechanik, Elektronik, Software (per `metadata def` im Modell) und die Schnittstellen dazwischen.
+- **Vergleich** – Unterschiede zum letzten Git-Commit: was neu, entfernt oder geändert ist und welche Tests zu wiederholen sind. Ungespeicherte Änderungen zählen mit.
 
 **Diagramme**: Übersicht nach Dateien, Verbindungen (IBD), Zustände, Aktionen, Anforderungen, Detaildiagramm per Klick auf einen Part.
 

@@ -212,7 +212,7 @@ function parse(src) {
     if (pk().t === 'block') { i++; return; }
     pendingMeta = [];
     while (isSym('#') && pk(1).t === 'id') { i++; pendingMeta.push(lastSeg(qname())); }
-    if (isSym('@')) { skipStmt(); return; }
+    if (isSym('@')) { i++; const n = qname(); if (n) (p.meta || (p.meta = [])).push(lastSeg(n).toLowerCase()); skipStmt(); return; }
     if (kw() && VIS.has(kw())) i++;
     const v = kw(), line = pk().line;
     if (EXPRK.has(p.kind) || p.role === 'objective') {
@@ -976,7 +976,7 @@ function buildTrace() {
       if (r.el) { add(r.el, pa, 'end', info); add(r.el, pb, 'end', info); }
     }
   }
-  TR = { edges, out, inn, broken, links };
+  TR = { edges, out, inn, broken, links }; DISC = null;
   return TR;
 }
 const trOut = (x, t) => (TR.out.get(x) || []).filter(e => !t || e.type === t).map(e => e.b);
@@ -1253,4 +1253,123 @@ function modelChecks(warns) {
   }
   return items;
 }
-if (typeof module !== 'undefined') module.exports = { L, Ln, Lj, setDicts, setLang, getLang: () => LANG, describe, modelChecks, RULES, kindPlain, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
+
+/* ================= Disziplinen ================= */
+// Disziplin = eine metadata def aus dem Modell, angewendet als Präfix (#Software part def …) oder im Rumpf (@Software;).
+// Verwendungen erben die Disziplin ihrer Definition, Definitionen die ihrer allgemeineren Definition.
+let DISC = null;
+function disciplines() {
+  const defs = IDX.all.filter(e => e.kind === 'metadata' && e.isDef && e.name);
+  const byLow = new Map(defs.map(d => [d.name.toLowerCase(), d]));
+  const applied = new Set(); for (const e of IDX.all) for (const m of e.meta || []) if (byLow.has(m)) applied.add(byLow.get(m));
+  return defs.filter(d => applied.has(d));
+}
+function disciplineOf(el, seen) {
+  if (!el) return null; seen = seen || new Set(); if (seen.has(el)) return null; seen.add(el);
+  if (!DISC) DISC = new Map(disciplines().map(d => [d.name.toLowerCase(), d]));
+  for (const m of el.meta || []) if (DISC.has(m)) return DISC.get(m);
+  for (const t of el.isDef ? el.specs : el.types) { const d = resolveDef(t, el); if (d) { const r = disciplineOf(d, seen); if (r) return r; } }
+  return null;
+}
+const DISC_KINDS = ['part', 'item', 'port', 'interface', 'connection', 'action', 'state'];
+function disciplineView() {
+  const list = disciplines(); if (!DISC) disciplineOf(null);
+  const groups = list.map(d => ({ d, els: [], reqs: new Set() })); const none = { d: null, els: [], reqs: new Set() };
+  const gOf = d => d ? groups.find(g => g.d === d) : none;
+  for (const e of IDX.all) {
+    if (!e.name || e.anon || !DISC_KINDS.includes(e.kind)) continue;
+    const own = (e.meta || []).some(m => DISC && DISC.has(m));
+    if (!e.isDef && !own) continue;
+    const d = disciplineOf(e);
+    if (!d && e.kind !== 'part') continue;
+    gOf(d).els.push(e);
+  }
+  for (const ed of TR.edges) if (ed.type === 'satisfy') gOf(disciplineOf(ed.a)).reqs.add(ed.b);
+  const cross = [];
+  for (const l of TR.links) {
+    const da = disciplineOf(l.ua) || disciplineOf(l.pa && l.pa.parent), db = disciplineOf(l.ub) || disciplineOf(l.pb && l.pb.parent);
+    if (da && db && da !== db) cross.push(Object.assign({ da, db }, l));
+  }
+  const alloc = []; const seenA = new Set();
+  for (const ed of TR.edges) if (ed.type === 'allocate' || ed.type === 'perform') {
+    const [sw, hw] = ed.type === 'allocate' ? [ed.a, ed.b] : [ed.b, ed.a];
+    const ds = disciplineOf(sw), dh = disciplineOf(hw); const k = ds && dh && (sw.qn + '>' + hw.qn);
+    if (ds && dh && ds !== dh && !seenA.has(k)) { seenA.add(k); alloc.push({ type: ed.type, a: sw, b: hw, da: ds, db: dh, line: ed.line, file: ed.file }); }
+  }
+  return { list, groups: [...groups, none].map(g => Object.assign(g, { reqs: [...g.reqs] })), cross, alloc };
+}
+
+/* ================= Baseline-Vergleich ================= */
+// Schlüssel eines Elements über Modellstände hinweg: qualifizierter Name + Art (+ Ort bei Namenlosen)
+const elKey = el => el ? (el.qn || el.name || '') + '|' + el.kind + '|' + (el.isDef ? 'd' : 'u') + (el.anon || !el.name ? '|' + el.file + ':' + el.line : '') : '';
+const SIG_FIELDS = ['types', 'specs', 'redefs', 'refs', 'mult', 'value', 'doc', 'short', 'dir', 'mods', 'meta'];
+const SIG_EDGES = ['typed', 'spec', 'satisfy', 'verify', 'derive', 'refine', 'allocate', 'perform', 'subject', 'connect', 'flow', 'bind', 'end', 'depend'];
+// Momentaufnahme des aktuell geladenen Modells (nach buildIndex + buildTrace)
+function snapshot(warns) {
+  const els = new Map();
+  for (const e of IDX.all) {
+    if (!e.name || e.anon || e.kind === 'root') continue;
+    const sig = {}; for (const f of SIG_FIELDS) { const v = e[f]; sig[f] = Array.isArray(v) ? [...v].sort().join(', ') : (v == null ? '' : String(v)); }
+    sig.exprs = [e, ...e.children.filter(c => !c.name || c.anon)].flatMap(c => [...(c.constraints || []), ...(c.exprs || [])]).join('; '); // Bedingungen in namenlosen constraints
+    const edges = new Set((TR.out.get(e) || []).filter(x => SIG_EDGES.includes(x.type) && x.b.name && !x.b.anon).map(x => x.type + ' ' + elKey(x.b)));
+    let p = e.parent; while (p && (!p.name || p.anon) && p.kind !== 'root') p = p.parent;
+    els.set(elKey(e), { key: elKey(e), name: e.name, kind: e.kind, isDef: e.isDef, qn: e.qn, file: e.file, line: e.line, parent: p && p.kind !== 'root' ? elKey(p) : '', sig, edges });
+  }
+  const cov = new Map(coverage().map(r => [elKey(r.el), { status: r.status, name: r.el.name, id: r.id }]));
+  const checks = modelChecks(warns || []).map(c => ({ rule: c.rule, sev: c.sev, key: c.rule + '|' + (c.el ? elKey(c.el) : '') + '|' + c.msg, el: c.el ? elKey(c.el) : '', msg: c.msg }));
+  return { els, cov, checks };
+}
+const keyName = k => { const q = k.split('|')[0]; return q.split('::').pop() || q; };
+function diffSnapshots(base, cur) {
+  const added = [], removed = [], changed = [];
+  for (const [k, c] of cur.els) {
+    const b = base.els.get(k);
+    if (!b) { if (!cur.els.has(c.parent) || base.els.has(c.parent)) added.push(c); continue; }
+    const fields = [...SIG_FIELDS, 'exprs'].filter(f => b.sig[f] !== c.sig[f]).map(f => ({ f, old: b.sig[f], now: c.sig[f] }));
+    const edAdd = [...c.edges].filter(x => !b.edges.has(x)), edDel = [...b.edges].filter(x => !c.edges.has(x));
+    if (fields.length || edAdd.length || edDel.length) changed.push(Object.assign({}, c, { fields, edAdd, edDel }));
+  }
+  for (const [k, b] of base.els) if (!cur.els.has(k) && (!base.els.has(b.parent) || cur.els.has(b.parent))) removed.push(b);
+  const covChg = [];
+  for (const [k, c] of cur.cov) { const b = base.cov.get(k); if (!b) covChg.push({ key: k, name: c.name, id: c.id, old: null, now: c.status }); else if (b.status !== c.status) covChg.push({ key: k, name: c.name, id: c.id, old: b.status, now: c.status }); }
+  for (const [k, b] of base.cov) if (!cur.cov.has(k)) covChg.push({ key: k, name: b.name, id: b.id, old: b.status, now: null });
+  const bk = new Set(base.checks.map(c => c.key)), ck = new Set(cur.checks.map(c => c.key));
+  return { added, removed, changed, covChg, newChecks: cur.checks.filter(c => !bk.has(c.key)), fixedChecks: base.checks.filter(c => !ck.has(c.key)) };
+}
+// Folgen im aktuellen Modell: was eine neue oder geänderte Stelle beeinflusst
+function diffImpact(diff, depth) {
+  const byKey = new Map(IDX.all.map(e => [elKey(e), e]));
+  const starts = new Set();
+  for (const x of [...diff.changed, ...diff.added]) { let e = byKey.get(x.key); while (e && !stageOf(e)) e = e.parent; if (e && e.kind !== 'root') starts.add(e); }
+  const hit = new Map();
+  for (const s of starts) for (const r of impactOf(s, depth || 3)) if (!starts.has(r.el)) { const h = hit.get(r.el); if (!h || h.depth > r.depth) hit.set(r.el, Object.assign({ from: s }, r)); }
+  const all = [...hit.values()];
+  return { starts: [...starts], reqs: all.filter(r => stageOf(r.el) === 'req'), tests: all.filter(r => stageOf(r.el) === 'test'), other: all.filter(r => !['req', 'test'].includes(stageOf(r.el))) };
+}
+
+/* ================= Geführte Tour: Plan aus dem Modell ================= */
+// Sucht eine vollständig nachgewiesene Anforderung mit Umsetzung und Test und baut daraus die Stationen der Tour.
+function tourPlan() {
+  const rows = coverage().filter(r => r.status !== 'group');
+  const score = r => (r.status === 'ok' ? 10 : r.sat.length ? 4 : 0) + r.sat.filter(s => portsOfAny(s).length).length * 2 + (r.sat.some(s => behaviourOf(s)) ? 1 : 0);
+  const best = rows.slice().sort((a, b) => score(b) - score(a))[0] || null;
+  const gap = rows.find(r => r.status !== 'ok') || null;
+  if (!best) return { req: null, gap, impl: null, test: null, port: null, behav: null };
+  const impl = best.sat[0] || null;
+  const port = impl ? portsOfAny(impl)[0] || null : null;
+  const behav = impl ? behaviourOf(impl) : null;
+  return { req: best.el, gap: gap && gap.el, impl, test: best.ver[0] || null, port, behav };
+}
+function defOf(el) { return el && !el.isDef && el.types[0] ? resolveDef(el.types[0], el) : el; }
+function portsOfAny(el) { const d = defOf(el); return [...(el.children || []), ...((d && d.children) || [])].filter(c => c.kind === 'port' && c.name); }
+function behaviourOf(el) {
+  const chain = [el, defOf(el)]; for (let q = el.parent; q && q.kind !== 'package' && q.kind !== 'root'; q = q.parent) chain.push(q);
+  for (const x of chain) if (x) {
+    const p = trOut(x, 'perform')[0] || (x.children || []).find(c => (c.kind === 'state' || c.kind === 'action') && !c.anon && c.types.length);
+    if (p) return defOf(p) || p;
+    const a = trIn(x, 'allocate')[0]; if (a) return a;
+  }
+  return null;
+}
+
+if (typeof module !== 'undefined') module.exports = { disciplines, disciplineOf, disciplineView, elKey, snapshot, diffSnapshots, diffImpact, tourPlan, L, Ln, Lj, setDicts, setLang, getLang: () => LANG, describe, modelChecks, RULES, kindPlain, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };

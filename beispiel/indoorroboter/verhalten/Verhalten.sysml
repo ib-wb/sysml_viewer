@@ -2,10 +2,12 @@
 private import ScalarValues::*;
 
 package Verhalten {
+    private import Disziplinen::*;
+
     item def Pose;
     item def Pfad;
 
-    state def Betriebszustaende {
+    #Software state def Betriebszustaende {
         entry; then Bereit;
 
         state Bereit;
@@ -31,7 +33,7 @@ package Verhalten {
         transition first Laden accept AkkuVoll then Bereit;
     }
 
-    action def NavigiereZumZiel {
+    #Software action def NavigiereZumZiel {
         in item ziel : Pose;
         out item erreicht : Boolean;
 

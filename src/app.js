@@ -374,7 +374,7 @@ function setFiles(files, project, dirHandle) {
   files.sort((a, b) => (a.name.split('/').length - b.name.split('/').length) || a.name.localeCompare(b.name, 'de'));
   S.files = files; S.project = project; S.active = 0; S.dirHandle = dirHandle || null; S.sel = null; S.lastKey = ''; closeDetail();
   if (files.length > 1 && !S.view) S.view = 'struct';
-  NAV.hist = []; NAV.idx = -1; NAV.tab = 'cover'; saveHist();
+  NAV.hist = []; NAV.idx = -1; NAV.tab = 'start'; saveHist();
   persist(); showFile(0); reparse();
 }
 function gotoLine(file, line) {
@@ -456,7 +456,7 @@ async function loadList(list, label) {
   const files = await filesFromList(list);
   if (!files.length) { toast(L('ui.noModelFiles')); return; }
   const root = stripRoot(files);
-  setFiles(files, root || label || (files.length === 1 ? files[0].name : 'Auswahl'));
+  setFiles(files, root || label || (files.length === 1 ? files[0].name : L('diff.selection')));
   toast(Ln('ui.filesRead', files.length));
 }
 $('file').onchange = e => { loadList([...e.target.files], null); e.target.value = ''; };
@@ -570,6 +570,7 @@ function initVSCode() {
   if (store.get('nosrc') === null) setSrc(false);
   window.addEventListener('message', e => {
     const m = e.data || {};
+    if (m.type === 'baseline') { if (m.error) toast(L('diff.gitError', { msg: m.error })); else if (!m.files.length) toast(L('diff.gitEmpty')); else setBaseline(m.files, m.name); }
     if (m.type === 'files') { syncFiles(m.files, m.project); S.brand = () => L('vsc.status', { project: m.project, files: Ln('vsc.modelFiles', m.files.length) }); applyStatic(); }
     if (m.type === 'config') { S.follow = !!m.follow; if (m.lang && !store.get('lang')) { const c = String(m.lang).toLowerCase().split('-')[0]; if (I18N[c] && c !== LANG) changeLang(c, true); } }
     if (m.type === 'reveal') revealAt(m.file, m.line);

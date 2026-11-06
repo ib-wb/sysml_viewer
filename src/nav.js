@@ -1,8 +1,8 @@
 
 /* ================= Navigator: Abdeckung, Rückverfolgung, Auswirkung ================= */
-const NAV = { tab: store.get('ntab') || 'cover', hist: [], idx: -1, depth: +(store.get('ndepth') || 2), gaps: false };
+const NAV = { tab: store.get('ntab') || 'start', hist: [], idx: -1, depth: +(store.get('ndepth') || 2), gaps: false };
 try { const h = JSON.parse(store.get('nhist') || 'null'); if (h && Array.isArray(h.hist)) { NAV.hist = h.hist.slice(-30); NAV.idx = Math.min(h.idx, NAV.hist.length - 1); } } catch (e) {}
-const NTABS = ['check', 'cover', 'trace', 'impact'];
+const NTABS = ['start', 'check', 'cover', 'trace', 'impact', 'disc', 'diff'];
 const STATUS = Object.fromEntries(['ok', 'untested', 'unimpl', 'open', 'group'].map(k => [k, { get 0() { return L('status.' + k); }, get 1() { return L('status.' + k + '.hint'); } }]));
 const stIdx = id => STAGES.findIndex(s => s.id === id);
 
@@ -21,7 +21,7 @@ function navGo(el, tab) {
   if (!el) return;
   const k = keyOf(el);
   if (NAV.hist[NAV.idx] !== k) { NAV.hist = NAV.hist.slice(0, NAV.idx + 1); NAV.hist.push(k); if (NAV.hist.length > 40) NAV.hist.shift(); NAV.idx = NAV.hist.length - 1; }
-  NAV.tab = tab || (NAV.tab === 'cover' || NAV.tab === 'check' ? 'trace' : NAV.tab);
+  NAV.tab = tab || (['trace', 'impact'].includes(NAV.tab) ? NAV.tab : 'trace');
   saveHist(); closeDetail();
   if (S.mode !== 'nav') setMode('nav'); else renderNav();
   $('nbody').scrollTop = 0;
@@ -55,13 +55,18 @@ function renderNav() {
   for (const k of NTABS) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'vtab'; b.setAttribute('role', 'tab'); b.title = L('nav.tab.' + k + '.hint');
     b.setAttribute('aria-selected', String(NAV.tab === k)); b.textContent = L('nav.tab.' + k);
+    if (k === 'diff' && S.base) { const D = getDiff(); const n = D ? D.d.added.length + D.d.removed.length + D.d.changed.length : 0; if (n) { const sp = document.createElement('span'); sp.className = 'n chg'; sp.textContent = n; b.appendChild(sp); } }
     if (k === 'check') { const n = currentChecks().filter(i => i.sev !== 'hint').length; if (n) { const sp = document.createElement('span'); sp.className = 'n bad'; sp.textContent = n; b.appendChild(sp); } }
     b.onclick = () => { NAV.tab = k; saveHist(); renderNav(); }; t.appendChild(b);
   }
   $('nBack').disabled = NAV.idx <= 0; $('nFwd').disabled = NAV.idx >= NAV.hist.length - 1;
   renderTrail(); renderSearch();
   const body = $('nbody');
-  if (NAV.tab === 'check') renderCheck(body);
+  if (!NTABS.includes(NAV.tab)) NAV.tab = 'start';
+  if (NAV.tab === 'start') renderStart(body);
+  else if (NAV.tab === 'disc') renderDisc(body);
+  else if (NAV.tab === 'diff') renderDiff(body);
+  else if (NAV.tab === 'check') renderCheck(body);
   else if (NAV.tab === 'cover') renderCover(body);
   else if (NAV.tab === 'trace') renderTraceTab(body);
   else renderImpactTab(body);

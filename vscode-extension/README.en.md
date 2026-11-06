@@ -10,6 +10,9 @@ Navigator and diagrams for SysML v2 text models, right inside VS Code. The viewe
 - **Coverage** – which requirement is satisfied by which component (`satisfy`) and verified by which test (`verify`). Gaps are marked in red.
 - **Traceability** – one element in focus, next to it everything attached to it: requirements, structure, interfaces, behaviour, verification. A click moves the focus, “Your path” leads back.
 - **Impact** – what is affected when an element changes, with reason and path.
+- **Start** – entry questions and a guided tour through your own model.
+- **Disciplines** – mechanics, electronics, software (via `metadata def` in the model) and the interfaces between them.
+- **Compare** – differences from the last Git commit: what is new, removed or changed and which tests to repeat. Unsaved changes are included.
 
 **Diagrams**: overview by file, connections (IBD), states, actions, requirements, detail diagram by clicking a part.
 

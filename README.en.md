@@ -16,14 +16,18 @@ Companion tool to the textbook *SysML v2, MBSE und ROS2 für Einsteiger* (German
 
 | View | Content |
 |---|---|
+| Start | The model in numbers and entry questions (“Which requirements are still open?”, “What is affected if I change a part?” …) that lead straight to the matching view |
 | Coverage | Matrix requirement → implemented by (`satisfy`) → verified by (`verify`), gaps marked in red |
 | Traceability | Focus element with the columns requirements · structure · interfaces · behaviour · verification; a click moves the focus, “Your path” leads back |
 | Impact | What a change affects – with reach, reason and path for each element |
+| Disciplines | What belongs to mechanics, electronics, software …, which requirements each discipline satisfies, interfaces across discipline boundaries and software-on-hardware assignments; diagrams can be coloured by discipline |
+| Compare | Differences from a baseline (kept state, folder, files or – in VS Code – the last Git commit): new, removed and changed elements, requirements to re-prove, tests to repeat, coverage and model check before/after; marked in the diagrams |
 
 **Learning aids**
 
 | Feature | What it does |
 |---|---|
+| Guided tour | Walks along the development path with an example from the loaded model: requirement → implementation → interface → behaviour → test → coverage → impact – with highlighting and the matching source line |
 | Focus | One element stays selected across navigator, diagrams, detail view and model tree; diagrams automatically pick a context in which it appears and highlight it |
 | Profile | Describes the focus element in plain language: what it is, what it consists of, what it is connected to, which requirement it satisfies, which test checks it, what a change affects – gaps in red |
 | Model check | Errors (dangling references, unknown types, mismatched port directions), gaps (requirement without implementation or test, test without requirement) and hints (open ports, components without a requirement, unused definitions) – each with a reason, a jump to the source and a code suggestion |
@@ -62,6 +66,24 @@ The navigator only follows relationships that are modelled:
 | Derivation | `#derivation connection { end #original ::> a; end #derive ::> b; }` |
 | Allocation | `allocate NavigateToGoal to robot.controller;` |
 
+## Disciplines in the model
+
+Disciplines are ordinary metadata. The viewer has no fixed names – every `metadata def` applied in the model is a discipline:
+
+```
+package Disciplines {
+    metadata def Mechanics;
+    metadata def Electronics;
+    metadata def Software;
+}
+#Mechanics part def Wheel { … }       // as a prefix
+part def Battery { @Electronics; }    // or in the body
+```
+
+Usages inherit the discipline of their definition, definitions that of their more general definition. If an element has several, the first one counts.
+
+## Sample project
+
 A complete sample with two deliberate gaps is in `beispiel/indoor-robot/`, with identical content in German in `beispiel/indoorroboter/`. The viewer shows the sample in the selected language; switching the language swaps it as long as you have not edited it.
 
 ## Limitations
@@ -94,13 +116,14 @@ src/                 viewer sources
   app.js             user interface, files, diagram mode, VS Code integration
   nav.js             navigator: coverage, traceability, impact
   learn.js           learning aids: shared focus, profile, model check, notation explanations
+  guide.js           getting started: start page, guided tour, disciplines, baseline comparison
   page.html          page skeleton and styles
   diag.css           diagram styles (also used for SVG export)
   lang/              UI texts per language: de.json (base), en.json, …
 tools/build.py       builds dist/ and the extension webview
 dist/                ready-to-use browser version
 vscode-extension/    VS Code extension (extension.js, package.json, media/)
-beispiel/            indoor robot sample, 5 files each: indoorroboter/ (de), indoor-robot/ (en)
+beispiel/            indoor robot sample, 6 files each: indoorroboter/ (de), indoor-robot/ (en)
 tests/               parser, traceability, profile, check and language tests; extension test against a VS Code mock
   fixtures/          deliberately faulty model for the model check
 ```

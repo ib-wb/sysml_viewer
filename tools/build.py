@@ -30,7 +30,7 @@ def sample_files(d):
 
 def page():
     css = read(SRC, 'diag.css')
-    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js') + '\n' + read(SRC, 'learn.js'))
+    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js') + '\n' + read(SRC, 'learn.js') + '\n' + read(SRC, 'guide.js'))
     langs = {}
     for f in sorted(os.listdir(os.path.join(SRC, 'lang'))):
         if f.endswith('.json'):

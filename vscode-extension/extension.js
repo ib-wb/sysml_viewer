@@ -2,6 +2,8 @@
 // Liest alle Modelldateien des Workspace, zeigt sie im Viewer (Webview) und verbindet beides in beide Richtungen.
 'use strict';
 const vscode = require('vscode');
+const cp = require('child_process');
+const path = require('path');
 
 const MODEL_EXT = /\.(sysml|kerml)$/i;
 let panel = null;          // die eine Viewer-Webview
@@ -14,8 +16,8 @@ const cfg = () => vscode.workspace.getConfiguration('sysmlViewer');
 
 // Meldungen der Extension selbst; die Webview-Texte stehen in src/lang/*.json
 const MSG = {
-  de: { notFound: 'SysML Viewer: Datei „{0}“ nicht gefunden.', openFirst: 'SysML Viewer: Bitte eine .sysml-Datei im Editor öffnen.' },
-  en: { notFound: 'SysML Viewer: file “{0}” not found.', openFirst: 'SysML Viewer: please open a .sysml file in the editor.' }
+  de: { noWorkspace: 'Kein Ordner geöffnet.', notFound: 'SysML Viewer: Datei „{0}“ nicht gefunden.', openFirst: 'SysML Viewer: Bitte eine .sysml-Datei im Editor öffnen.' },
+  en: { noWorkspace: 'No folder is open.', notFound: 'SysML Viewer: file “{0}” not found.', openFirst: 'SysML Viewer: please open a .sysml file in the editor.' }
 };
 function msg(key, ...a) {
   const lang = ((vscode.env && vscode.env.language) || 'en').slice(0, 2);
@@ -50,6 +52,24 @@ async function collectFiles() {
     files.push({ name, text });
   }
   return files;
+}
+
+
+// Baseline für den Vergleich: Modelldateien des ersten Workspace-Ordners im Stand eines Git-Commits
+function git(args, cwd) {
+  return new Promise((res, rej) => cp.execFile('git', args, { cwd, maxBuffer: 64 * 1024 * 1024 }, (e, out, err) => e ? rej(new Error(String(err || e.message).trim().split('\n')[0])) : res(out)));
+}
+const SKIP = /(^|\/)(node_modules|\.git|build|dist|out)\//;
+async function gitBaseline(ref) {
+  const ws = vscode.workspace.workspaceFolders; if (!ws || !ws.length) throw new Error(msg('noWorkspace'));
+  const folder = ws[0].uri.fsPath;
+  const top = (await git(['rev-parse', '--show-toplevel'], folder)).trim();
+  const short = (await git(['rev-parse', '--short', ref], folder)).trim();
+  const rel = path.relative(top, folder).split(path.sep).join('/');
+  const names = (await git(['ls-tree', '-r', '--name-only', ref, '--', rel || '.'], top)).split('\n').filter(n => MODEL_EXT.test(n) && !SKIP.test(n));
+  const files = [];
+  for (const n of names) files.push({ name: rel ? n.slice(rel.length + 1) : n, text: await git(['show', ref + ':' + n], top) });
+  return { files, name: `${ref} (${short})` };
 }
 
 async function sendFiles() {
@@ -104,6 +124,7 @@ function setupPanel(p, context) {
       sendFiles().then(() => { for (const m of pending) p.webview.postMessage(m); pending = []; });
     }
     if (msg.type === 'goto') gotoInEditor(msg);
+    if (msg.type === 'baseline') gitBaseline(msg.ref || 'HEAD').then(r => p.webview.postMessage(Object.assign({ type: 'baseline' }, r)), e => p.webview.postMessage({ type: 'baseline', error: e.message }));
   }, null, context.subscriptions);
   p.onDidDispose(() => { if (panel === p) { panel = null; ready = false; pending = []; } }, null, context.subscriptions);
   return p;

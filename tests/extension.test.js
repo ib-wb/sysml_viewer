@@ -21,6 +21,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   const files = M.posted.find(m => m.type === 'files');
   assert.ok(files && files.files.length >= 5, 'Modelldateien nicht gesendet');
 
+  M.send({ type: 'baseline', ref: 'HEAD' }); await wait(1500);
+  const base = M.posted.find(m => m.type === 'baseline');
+  assert.ok(base && !base.error, 'Baseline aus Git fehlgeschlagen: ' + (base && base.error));
+  assert.ok(base.files.length >= 5 && base.files.every(f => !f.name.startsWith('beispiel/')) && /^HEAD \(\w+\)$/.test(base.name), 'Baseline-Dateien falsch: ' + base.name);
+
   M.send({ type: 'goto', file: 'anforderungen/Anforderungen.sysml', line: 34 }); await wait(50);
   assert.deepStrictEqual(M.log.find(l => l[0] === 'show').slice(1, 3), ['anforderungen/Anforderungen.sysml', 34]);
 
