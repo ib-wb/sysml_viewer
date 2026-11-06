@@ -4,3 +4,6 @@ vscode-extension/media/elk.bundled.js
 vscode-extension/media/viewer.html
 __pycache__/
 .DS_Store
+desktop/ui/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

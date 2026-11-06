@@ -2,7 +2,7 @@
 
 **Deutsch** · [English](README.en.md)
 
-Navigator und Diagramme für **SysML-v2-Textmodelle** – im Browser und als VS-Code-Erweiterung. Der Viewer liest ein ganzes Projekt aus mehreren `.sysml`/`.kerml`-Dateien und beantwortet die Fragen, die bei der Arbeit am Modell ständig auftauchen:
+Navigator und Diagramme für **SysML-v2-Textmodelle** – im Browser, als VS-Code-Erweiterung und als Desktop-App (Rust/Tauri). Der Viewer liest ein ganzes Projekt aus mehreren `.sysml`/`.kerml`-Dateien und beantwortet die Fragen, die bei der Arbeit am Modell ständig auftauchen:
 
 - Welche Anforderung wird von welcher Komponente umgesetzt – und von welchem Test geprüft?
 - Was hängt an diesem Element: Struktur, Schnittstellen, Verhalten, Nachweise?
@@ -51,6 +51,8 @@ Begleitwerkzeug zum Lehrbuch *SysML v2, MBSE und ROS2 für Einsteiger* (Wolfgang
 | Editor automatisch mitlaufen lassen | Einstellung `sysmlViewer.followNavigator` |
 
 Die Ansicht aktualisiert sich beim Tippen, auch ohne Speichern.
+
+**Als Desktop-App:** Installer für Windows, macOS und Linux unter *Actions → Desktop-App bauen*; die App speichert Änderungen, beobachtet den Ordner und vergleicht mit dem letzten Git-Commit. Details in [desktop/README.md](desktop/README.md).
 
 ## Was das Modell für die Rückverfolgung braucht
 
@@ -146,6 +148,7 @@ src/                 Quellen des Viewers
   nav.js             Navigator: Abdeckung, Rückverfolgung, Auswirkung
   learn.js           Lernhilfen: gemeinsamer Fokus, Steckbrief, Modell-Check, Notationserklärungen
   guide.js           Einstieg: Startseite, geführte Tour, Disziplinen, Baseline-Vergleich
+  desktop.js         Anbindung an die Desktop-App (nur dort aktiv)
   page.html          Seitengerüst und Styles
   diag.css           Styles der Diagramme (auch für SVG-Export)
   lang/              Oberflächentexte je Sprache: de.json (Basis), en.json, …
@@ -153,6 +156,7 @@ src/                 Quellen des Viewers
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
+desktop/             Desktop-App: Rust/Tauri (src-tauri/) mit der Oberfläche aus src/ (ui/, wird erzeugt)
 beispiel/            Beispielprojekt Indoorroboter, je 6 Modelldateien und tour.json: indoorroboter/ (de), indoor-robot/ (en)
 tests/               Parser-, Traceability-, Steckbrief-, Check- und Sprachtests; Test der Erweiterung gegen ein VS-Code-Mock
   fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
@@ -165,6 +169,7 @@ npm install          # elkjs (Layout) und vsce (Paketierung)
 npm run build        # src/ → dist/sysml-viewer.html + vscode-extension/media/
 npm test             # Parser, Traceability, Sprachdateien, Erweiterung
 npm run package      # .vsix nach dist/
+npm run desktop      # Desktop-App starten (Rust nötig, siehe desktop/README.md)
 ```
 
 Abhängigkeiten zur Laufzeit: [elkjs](https://github.com/kieler/elkjs) 0.9.3 (EPL-2.0) für das Layout; im Browser per CDN, in der Erweiterung lokal eingebunden.

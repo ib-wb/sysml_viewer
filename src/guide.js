@@ -172,8 +172,8 @@ function renderDiff(body) {
     body.innerHTML = `<div class="nempty"><h3>${esc(L('diff.emptyTitle'))}</h3><p>${esc(L('diff.emptyText'))}</p>
       <div class="dbtns">
         <button type="button" class="btn primary" data-base="now">${esc(L('diff.b.now'))}</button>
-        ${VSC ? `<button type="button" class="btn" data-base="git">${esc(L('diff.b.git'))}</button>` : `<button type="button" class="btn" data-base="dir">${esc(L('diff.b.dir'))}</button><button type="button" class="btn" data-base="files">${esc(L('diff.b.files'))}</button>`}
-      </div><p>${esc(L(VSC ? 'diff.tipVsc' : 'diff.tip'))}</p></div>`;
+        ${VSC || (DESK && S.desk) ? `<button type="button" class="btn" data-base="git">${esc(L('diff.b.git'))}</button>` : ''}${VSC ? '' : `<button type="button" class="btn" data-base="dir">${esc(L('diff.b.dir'))}</button>${DESK ? '' : `<button type="button" class="btn" data-base="files">${esc(L('diff.b.files'))}</button>`}`}
+      </div><p>${esc(L(VSC ? 'diff.tipVsc' : DESK && S.desk ? 'diff.tipDesk' : 'diff.tip'))}</p></div>`;
     return;
   }
   const D = getDiff(); const { d, imp } = D;
@@ -185,8 +185,8 @@ function renderDiff(body) {
     return `<li class="dfi df-${kind}"><span class="pill dp-${kind}">${esc(L('diff.k.' + kind))}</span>${el ? elBtn(el) : `<b>${esc(c.name)}</b> <span class="muted">${esc(c.isDef ? c.kind + ' def' : c.kind)}</span>`}<span class="muted mono">${esc(c.qn || '')}</span>${kind !== 'del' ? locBtn(c.file, c.line) : ''}${kind === 'chg' ? `<ul class="dff">${fld(c)}</ul>` : ''}</li>`; };
   const reason = r => `<li>${elBtn(r.el)}<span class="muted">${esc(r.reason)}</span></li>`;
   body.innerHTML = `
-    <div class="dhead"><span>${esc(L('diff.against', { name: S.base.name }))}<span class="muted"> · ${esc(Ln('ui.stat.files', S.base.files.length))}${when ? ' · ' + esc(when) : ''}</span></span>
-      <span class="dbtns"><button type="button" class="btn" data-base="now">${esc(L('diff.b.renew'))}</button>${VSC ? `<button type="button" class="btn" data-base="git">${esc(L('diff.b.git'))}</button>` : ''}<button type="button" class="btn" data-base="clear">${esc(L('diff.b.clear'))}</button></span></div>
+    <div class="dhead"><span>${esc(L('diff.against', { name: S.base.name }))}<span class="muted"> · ${esc(Ln('ui.stat.files', S.base.files.filter(f => !isTourFile(f.name)).length))}${when ? ' · ' + esc(when) : ''}</span></span>
+      <span class="dbtns"><button type="button" class="btn" data-base="now">${esc(L('diff.b.renew'))}</button>${VSC || (DESK && S.desk) ? `<button type="button" class="btn" data-base="git">${esc(L('diff.b.git'))}</button>` : ''}<button type="button" class="btn" data-base="clear">${esc(L('diff.b.clear'))}</button></span></div>
     <div class="cov-sum">
       <div class="tile"><b class="c-add">${d.added.length}</b><span>${esc(L('diff.t.added'))}</span></div>
       <div class="tile"><b class="c-del">${d.removed.length}</b><span>${esc(L('diff.t.removed'))}</span></div>
@@ -226,9 +226,10 @@ $('nbody').addEventListener('click', e => {
   const b = e.target.closest('[data-base]'); if (!b) return;
   const a = b.dataset.base;
   if (a === 'now') setBaseline(S.files, L('diff.savedState'));
-  if (a === 'dir') pickBaseDir();
+  if (a === 'dir') { if (DESK) deskBaselineDir(); else pickBaseDir(); }
   if (a === 'files') pickBaseFiles(false);
   if (a === 'git' && VSC) { VSC.postMessage({ type: 'baseline', ref: 'HEAD' }); toast(L('diff.gitLoading')); }
+  if (a === 'git' && DESK) deskBaselineGit();
   if (a === 'clear') clearBaseline();
 });
 

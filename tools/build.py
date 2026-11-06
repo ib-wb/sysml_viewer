@@ -30,7 +30,7 @@ def sample_files(d):
 
 def page():
     css = read(SRC, 'diag.css')
-    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js') + '\n' + read(SRC, 'learn.js') + '\n' + read(SRC, 'guide.js'))
+    app = read(SRC, 'app.js').replace('/*NAV*/', read(SRC, 'nav.js') + '\n' + read(SRC, 'learn.js') + '\n' + read(SRC, 'guide.js') + '\n' + read(SRC, 'desktop.js'))
     langs = {}
     for f in sorted(os.listdir(os.path.join(SRC, 'lang'))):
         if f.endswith('.json'):
@@ -57,7 +57,14 @@ def main():
         shutil.copy(elk, os.path.join(media, 'elk.bundled.js'))
     else:
         print('Hinweis: node_modules/elkjs fehlt – erst "npm install" ausführen, sonst fehlt der Erweiterung die Layout-Bibliothek.', file=sys.stderr)
-    print('gebaut: dist/sysml-viewer.html, vscode-extension/media/viewer.html')
+    # Desktop-App (Tauri): gleiche Seite, Layout-Bibliothek lokal statt vom CDN
+    ui = os.path.join(ROOT, 'desktop', 'ui'); os.makedirs(ui, exist_ok=True)
+    desk = re.sub(r'<script src="[^"]*elk\.bundled\.js"></script>', '<script src="elk.bundled.js"></script>', body)
+    with open(os.path.join(ui, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(HEAD.format(csp='') + desk + '</body></html>')
+    if os.path.exists(elk):
+        shutil.copy(elk, os.path.join(ui, 'elk.bundled.js'))
+    print('gebaut: dist/sysml-viewer.html, vscode-extension/media/viewer.html, desktop/ui/index.html')
 
 if __name__ == '__main__':
     main()

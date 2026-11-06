@@ -31,7 +31,7 @@ function applyStatic() {
 }
 function changeLang(code, noStore) {
   setLang(code); if (!noStore) store.set('lang', LANG);
-  applyStatic();
+  applyStatic(); deskDirty();
   if (!$('info').dataset.custom) $('info').textContent = L('ui.info.diag');
   if (S.project === SAMPLE && isPristineSample(S.files) && S.files[0].text !== sampleFiles()[0].text) { setFiles(sampleFiles(), SAMPLE); return; }
   if (S.files.length) reparse(); else renderFocusBar();
@@ -359,10 +359,11 @@ function curFile() { return S.files[S.active] || S.files[0]; }
 function renderFileSel() {
   const sel = $('fileSel');
   const wc = {}; for (const w of parseRes.warns) wc[w.file] = (wc[w.file] || 0) + 1;
-  sel.innerHTML = S.files.map((f, i) => `<option value="${i}">${esc(f.name)}${wc[f.name] ? ' · ' + wc[f.name] + ' Hinweis' + (wc[f.name] > 1 ? 'e' : '') : ''}</option>`).join('');
+  sel.innerHTML = S.files.map((f, i) => `<option value="${i}">${esc(f.name)}${wc[f.name] ? ' · ' + Ln('ui.stat.warns', wc[f.name]) : ''}</option>`).join('');
   sel.value = String(S.active); sel.disabled = S.files.length < 2;
   $('project').textContent = projName() + (modelFiles().length > 1 ? ' · ' + Ln('ui.stat.files', modelFiles().length) : '');
   $('reloadBtn').hidden = !S.dirHandle;
+  if (DESK) deskDirty();
 }
 $('fileSel').onchange = e => { showFile(+e.target.value); };
 function showFile(i) { S.active = i; ta.value = curFile().text; syncGutter(); ta.scrollTop = 0; $('fileSel').value = String(i); }
@@ -588,6 +589,7 @@ function initVSCode() {
     try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 800))]); } catch (e) {}
     initVSCode(); return;
   }
+  if (DESK && await deskStartup()) return;
   let files = null, project = null;
   try { files = JSON.parse(store.get('files') || 'null'); project = store.get('project'); } catch (e) {}
   if (!files || !files.length) { const old = store.get('src'); if (old && old.trim()) { files = [{ name: store.get('fname') || 'Entwurf.sysml', text: old }]; project = files[0].name; } }
