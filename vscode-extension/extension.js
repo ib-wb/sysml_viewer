@@ -6,6 +6,8 @@ const cp = require('child_process');
 const path = require('path');
 
 const MODEL_EXT = /\.(sysml|kerml)$/i;
+const TOUR_FILE = /(^|[\\/])tour(\.[a-z]{2})?\.json$/i; // eigene Tour im Modellordner
+const WATCHED = f => MODEL_EXT.test(f) || TOUR_FILE.test(f);
 let panel = null;          // die eine Viewer-Webview
 let ready = false;         // Webview hat „ready“ gemeldet
 let pending = [];          // Nachrichten, die vor „ready“ anfallen
@@ -39,7 +41,8 @@ function projectName() {
 
 async function collectFiles() {
   const uris = await vscode.workspace.findFiles(cfg().get('include'), cfg().get('exclude'));
-  const open = new Map(vscode.workspace.textDocuments.filter(d => MODEL_EXT.test(d.fileName)).map(d => [d.uri.toString(), d]));
+  for (const u of await vscode.workspace.findFiles('**/tour*.json', cfg().get('exclude'))) if (TOUR_FILE.test(u.fsPath) && !uris.some(x => x.toString() === u.toString())) uris.push(u);
+  const open = new Map(vscode.workspace.textDocuments.filter(d => WATCHED(d.fileName)).map(d => [d.uri.toString(), d]));
   uriByName = new Map();
   const files = [];
   for (const uri of uris) {
@@ -152,12 +155,12 @@ function activate(context) {
     })
   );
   // Dateien beobachten: Speichern, Anlegen, Löschen, Umbenennen
-  const watcher = vscode.workspace.createFileSystemWatcher('**/*.{sysml,kerml}');
+  const watcher = vscode.workspace.createFileSystemWatcher('**/{*.sysml,*.kerml,tour*.json}');
   watcher.onDidChange(() => scheduleSend(250)); watcher.onDidCreate(() => scheduleSend(250)); watcher.onDidDelete(() => scheduleSend(250));
   context.subscriptions.push(watcher);
   // Live beim Tippen
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-    if (panel && cfg().get('liveUpdate') && MODEL_EXT.test(e.document.fileName)) scheduleSend(500);
+    if (panel && cfg().get('liveUpdate') && WATCHED(e.document.fileName)) scheduleSend(500);
   }));
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
     if (!panel) return;

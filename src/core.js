@@ -705,6 +705,7 @@ function parseFiles(files) {
   const root = { eid: 0, kind: 'root', isDef: false, name: null, children: [], rels: [], types: [], specs: [], redefs: [], refs: [], mods: [], parent: null, line: 0 };
   const warns = []; let eid = 0;
   files.forEach(f => {
+    if (/\.json$/i.test(f.name)) return; // z. B. tour.json
     let r; try { r = parse(f.text); } catch (e) { warns.push({ file: f.name, line: 1, msg: 'Parser abgebrochen: ' + e.message }); return; }
     (function w(e) { for (const c of e.children) { c.eid = ++eid; c.file = f.name; for (const rl of c.rels) rl.file = f.name; w(c); } })(r.root);
     for (const c of r.root.children) { c.parent = root; root.children.push(c); }
@@ -1299,6 +1300,24 @@ function disciplineView() {
   return { list, groups: [...groups, none].map(g => Object.assign(g, { reqs: [...g.reqs] })), cross, alloc };
 }
 
+// Fachsicht: was eine Disziplin betrifft (eigene Teile, erfüllte Anforderungen, Tests dazu) und wo sie an andere grenzt.
+// d = metadata def einer Disziplin oder 'test' für die Fachsicht Test.
+function disciplineScope(d) {
+  const own = new Set(), reqs = new Set(), tests = new Set(), bound = new Set();
+  const member = (e, k) => { if (!e || (k || 0) > 3) return false; if (d === 'test') return stageOf(e) === 'test'; const x = disciplineOf(e); if (x) return x === d; return e.kind === 'port' && member(e.parent, (k || 0) + 1); };
+  for (const e of IDX.all) if (e.name && !e.anon && member(e)) own.add(e);
+  const rows = coverage();
+  if (d === 'test') {
+    for (const r of rows) { reqs.add(r.el); r.ver.forEach(t => tests.add(t)); }
+    for (const t of own) { for (const s of trOut(t, 'subject')) bound.add(s); }
+  } else {
+    for (const r of rows) if (r.sat.some(x => member(x) || own.has(x))) { reqs.add(r.el); r.ver.forEach(t => tests.add(t)); }
+    for (const l of TR.links) { const a = member(l.ua) || member(l.pa), b = member(l.ub) || member(l.pb); if (a !== b) { const o = a ? [l.ub, l.pb] : [l.ua, l.pa]; o.forEach(x => x && bound.add(x)); } }
+    for (const e of TR.edges) if (e.type === 'allocate' || e.type === 'perform') { const a = member(e.a), b = member(e.b); if (a !== b) bound.add(a ? e.b : e.a); }
+  }
+  return { own, reqs, tests, bound, member };
+}
+
 /* ================= Baseline-Vergleich ================= */
 // Schlüssel eines Elements über Modellstände hinweg: qualifizierter Name + Art (+ Ort bei Namenlosen)
 const elKey = el => el ? (el.qn || el.name || '') + '|' + el.kind + '|' + (el.isDef ? 'd' : 'u') + (el.anon || !el.name ? '|' + el.file + ':' + el.line : '') : '';
@@ -1321,11 +1340,20 @@ function snapshot(warns) {
 }
 const keyName = k => { const q = k.split('|')[0]; return q.split('::').pop() || q; };
 function diffSnapshots(base, cur) {
+  // Gleiche Kennung <'A1'> = gleiches Element, auch wenn sich der Name ändert. Gleicher Name allein begründet keine Gleichheit.
+  const ren = []; const newOnly = [...cur.els.values()].filter(c => c.sig.short && !base.els.has(c.key));
+  for (const b of base.els.values()) if (b.sig.short && !cur.els.has(b.key)) { const c = newOnly.find(x => x.kind === b.kind && x.isDef === b.isDef && x.sig.short === b.sig.short); if (c) ren.push([b.qn, c.qn]); }
+  if (ren.length) {
+    const tr = k => { for (const [o, n] of ren) if (k.startsWith(o + '|') || k.startsWith(o + '::')) return n + k.slice(o.length); return k; };
+    const trE = x => { const i = x.indexOf(' '); return x.slice(0, i + 1) + tr(x.slice(i + 1)); };
+    base = Object.assign({}, base, { els: new Map([...base.els].map(([k, b]) => [tr(k), Object.assign({}, b, { key: tr(k), qnT: tr(b.qn), parent: tr(b.parent), edges: new Set([...b.edges].map(trE)) })])), cov: new Map([...base.cov].map(([k, v]) => [tr(k), v])) });
+  }
   const added = [], removed = [], changed = [];
   for (const [k, c] of cur.els) {
     const b = base.els.get(k);
     if (!b) { if (!cur.els.has(c.parent) || base.els.has(c.parent)) added.push(c); continue; }
     const fields = [...SIG_FIELDS, 'exprs'].filter(f => b.sig[f] !== c.sig[f]).map(f => ({ f, old: b.sig[f], now: c.sig[f] }));
+    if ((b.qnT || b.qn) !== c.qn) fields.unshift({ f: 'name', old: b.qn, now: c.qn }); // nur die eigene Umbenennung, nicht die des Elternteils
     const edAdd = [...c.edges].filter(x => !b.edges.has(x)), edDel = [...b.edges].filter(x => !c.edges.has(x));
     if (fields.length || edAdd.length || edDel.length) changed.push(Object.assign({}, c, { fields, edAdd, edDel }));
   }
@@ -1372,4 +1400,4 @@ function behaviourOf(el) {
   return null;
 }
 
-if (typeof module !== 'undefined') module.exports = { disciplines, disciplineOf, disciplineView, elKey, snapshot, diffSnapshots, diffImpact, tourPlan, L, Ln, Lj, setDicts, setLang, getLang: () => LANG, describe, modelChecks, RULES, kindPlain, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };
+if (typeof module !== 'undefined') module.exports = { disciplineScope, disciplines, disciplineOf, disciplineView, elKey, snapshot, diffSnapshots, diffImpact, tourPlan, L, Ln, Lj, setDicts, setLang, getLang: () => LANG, describe, modelChecks, RULES, kindPlain, plainKind, portDir, partsOf, buildTrace, traceNeighbors, impactOf, coverage, stageOf, dispName, resolveChain, trOut, trIn, parseFiles, viewDetail, isOpenable, tokenize, parse, buildIndex, viewStruct, viewIBD, viewStates, viewActions, viewReqs, ibdCandidates, stateCandidates, actionCandidates, elkGraph, renderSVG, measure, setMeasure: f => { measureText = f; }, within, nearestPkg };

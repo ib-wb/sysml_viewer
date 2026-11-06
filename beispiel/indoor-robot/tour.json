@@ -1,0 +1,60 @@
+{
+  "title": "From requirement to verification",
+  "_note": "Draft – please revise the texts. Fields per step: title, text, focus (qualified name or name), show (start, reqs, struct, ibd, states, actions, diagram, cover, gaps, trace, impact, check, disc, diff), code (true = source line of the element, or your own text), chapter (book reference).",
+  "steps": [
+    {
+      "show": "start",
+      "title": "Welcome to the indoor robot",
+      "text": "The robot drives through indoor spaces on its own, avoids obstacles and returns to its station to charge. The tour follows a single requirement – from what is required to how it is verified."
+    },
+    {
+      "show": "reqs",
+      "title": "What does the system require?",
+      "text": "Five requirements describe what the robot must be able to do, each with an ID such as R1 and a text. R2.1 ScanRate is derived from R2 ObstacleDetection."
+    },
+    {
+      "focus": "Requirements::robotRequirements::runtime",
+      "show": "trace",
+      "code": true,
+      "title": "R1: two hours of runtime",
+      "text": "We follow R1. The requirement is now in focus at the top; below, the profile says in plain language who implements it and who verifies it."
+    },
+    {
+      "focus": "Structure::Robot::battery",
+      "show": "trace",
+      "code": "satisfy Requirements::robotRequirements.runtime by robot.battery;",
+      "title": "The battery implements R1",
+      "text": "The satisfy … by … line in package System links requirement and component. Without it there would be no traceability."
+    },
+    {
+      "focus": "Structure::Robot::battery",
+      "show": "ibd",
+      "title": "How the battery is connected",
+      "text": "Through its output port the battery supplies the controller, the lidar and the drive. All three connections are of type PowerSupply."
+    },
+    {
+      "focus": "Behaviour::OperatingStates",
+      "show": "states",
+      "title": "What the robot does",
+      "text": "The state machine shows Ready, Navigation and Charging. When the battery reports BatteryLow, the robot switches to Charging – this is where behaviour depends on runtime."
+    },
+    {
+      "focus": "Tests::RuntimeTest",
+      "show": "trace",
+      "code": true,
+      "title": "The verification: RuntimeTest",
+      "text": "An endurance run with a fully charged battery. The verify in the objective links the test to R1. The chain is closed: required, implemented, verified."
+    },
+    {
+      "show": "gaps",
+      "title": "What is still open?",
+      "text": "R3 Weight is implemented but not tested. R4 EmergencyStop has neither implementation nor test. Both are deliberate gaps for practice."
+    },
+    {
+      "focus": "Structure::Battery",
+      "show": "impact",
+      "title": "What happens if the battery changes?",
+      "text": "A different battery affects the robot, requirement R1 and the RuntimeTest. The impact view shows every step with its reason."
+    }
+  ]
+}

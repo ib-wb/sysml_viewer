@@ -152,59 +152,11 @@ $('nbody').addEventListener('click', e => {
 }, true);
 
 /* ---------- Notation erklären ---------- */
-const NOTE_CODE = {
-  'e-comp': "part def Roboter { part akku : Akku; }",
-  'e-spec': "part def Akku :> Komponente;",
-  'e-typed': "port ausgang : EnergiePort;",
-  'e-defby': "part roboter : Roboter;",
-  'e-conn': "connect lidar.scanAus to rechner.scanEin;",
-  'e-iface': "interface : Versorgung connect akku.ausgang to rechner.energie;",
-  'e-flow': "flow of Fahrbefehl from rechner.fahrAus to antrieb.fahrEin;",
-  'e-bind': "bind a.x = b.y;",
-  'e-trans': "accept StartBefehl then Navigation;",
-  'e-succ': "first lokalisieren then pfadPlanen;",
-  'e-satisfy': "satisfy laufzeit by roboter.akku;",
-  'e-contain': "requirement r { requirement a : A; }",
-  'e-inner': "",
-  'def': "part def Akku { … }",
-  'usage': "part akku : Akku;",
-  'frame': "",
-  'file': "",
-  'collapsed': "",
-  'inherited': "part def Akku :> Komponente;  // erbt masse",
-  'redef': ":>> masse = 0.35;",
-  'feature': "attribute kapazitaet : Real = 5.2;",
-  'init': "entry; then Bereit;   bzw.   first start;",
-  'final': "then done;",
-  'decide': "decide; if ok then done; else lokalisieren;",
-  'fork': "fork; then a; then b;",
-  'amb': "part m : Struktur::Motor;",
-  'port-generic': "port ausgang : ~EnergiePort;",
-  'c-attributes': "attribute masse : Masse;",
-  'c-ports': "port energie : EnergiePort;",
-  'c-parts': "part motor : Motor[2];",
-  'c-directed features': "out item cmd : Fahrbefehl;",
-  'c-ends': "end quelle : ~EnergiePort;",
-  'c-actions': "perform action navigation : NavigiereZumZiel;",
-  'c-states': "exhibit state betrieb : Betriebszustaende;",
-  'c-constraints': "require constraint { laufzeit >= 2 }",
-  'c-literals': "enum def Farbe { rot; gruen; }",
-  'r-satisfy': "satisfy laufzeit by roboter.akku;",
-  'r-verify': "objective { verify laufzeit; }",
-  'r-derive': "#derivation connection { end #original ::> a; end #derive ::> b; }",
-  'r-refine': "#refinement dependency from a to b;",
-  'r-allocate': "allocate NavigiereZumZiel to roboter.rechner;",
-  'r-owns': "part def Roboter { part akku : Akku; }",
-  'r-typed': "part akku : Akku;",
-  'r-spec': "part def Akku :> Komponente;",
-  'r-connect': "interface : Versorgung connect akku.ausgang to rechner.energie;",
-  'r-port': "port ausgang : ~EnergiePort;",
-  'r-perform': "perform action navigation : NavigiereZumZiel;",
-  'r-subject': "subject pruefling : Roboter;",
-  'r-flow': "flow of Scan from lidar.scanAus to rechner.scanEin;"
-};
-const NOTE = new Proxy({}, { get: (o, k) => typeof k === 'string' && k in NOTE_CODE ? [L('note.' + k + '.t'), L('note.' + k + '.x'), NOTE_CODE[k]] : undefined });
-const kindTip = k => { const t = kindPlain(k); return t ? ['«' + k + '»', t.charAt(0).toUpperCase() + t.slice(1) + '.', ''] : null; };
+// Code-Beispiele je Notation stehen in den Sprachdateien (note.<schlüssel>.c), passend zum Beispielprojekt der Sprache
+const NOTE_KEYS = new Set(['e-comp', 'e-spec', 'e-typed', 'e-defby', 'e-conn', 'e-iface', 'e-flow', 'e-bind', 'e-trans', 'e-succ', 'e-satisfy', 'e-contain', 'e-inner', 'def', 'usage', 'frame', 'file', 'collapsed', 'inherited', 'redef', 'feature', 'init', 'final', 'decide', 'fork', 'amb', 'port-generic', 'c-attributes', 'c-ports', 'c-parts', 'c-directed features', 'c-ends', 'c-actions', 'c-states', 'c-constraints', 'c-literals', 'r-satisfy', 'r-verify', 'r-derive', 'r-refine', 'r-allocate', 'r-owns', 'r-typed', 'r-spec', 'r-connect', 'r-port', 'r-perform', 'r-subject', 'r-flow']);
+const bookRef = k => (BOOK && BOOK.refs && BOOK.refs[k]) || '';
+const NOTE = new Proxy({}, { get: (o, k) => typeof k === 'string' && NOTE_KEYS.has(k) ? [L('note.' + k + '.t'), L('note.' + k + '.x'), L('note.' + k + '.c'), bookRef(k)] : undefined });
+const kindTip = k => { const t = kindPlain(k); return t ? ['«' + k + '»', t.charAt(0).toUpperCase() + t.slice(1) + '.', '', bookRef(k)] : null; };
 function tipFor(t) {
   if (!t || !t.closest) return null;
   const d = t.closest('[data-tip]'); if (d) return NOTE[d.dataset.tip] || null;
@@ -237,7 +189,7 @@ $('tipsOn').onchange = e => { tipsOn = e.target.checked; store.set('tips', tipsO
 function hideTip() { clearTimeout(tipTimer); tipTarget = null; $('tip').hidden = true; }
 function showTip(x, y, n) {
   const tip = $('tip');
-  tip.innerHTML = `<b>${esc(n[0])}</b><span>${esc(n[1])}</span>${n[2] ? `<code>${esc(n[2])}</code>` : ''}`;
+  tip.innerHTML = `<b>${esc(n[0])}</b><span>${esc(n[1])}</span>${n[2] ? `<code>${esc(n[2])}</code>` : ''}${n[3] ? `<em class="tref">${esc(L('tip.book', { ref: n[3] }))}</em>` : ''}`;
   tip.hidden = false;
   const w = tip.offsetWidth, h = tip.offsetHeight, W = window.innerWidth, H = window.innerHeight;
   tip.style.left = Math.max(8, Math.min(x + 14, W - w - 8)) + 'px';

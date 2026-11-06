@@ -6,7 +6,7 @@ Ergebnis:
   vscode-extension/media/viewer.html  Webview-Variante für die VS-Code-Erweiterung
   vscode-extension/media/elk.bundled.js  Layout-Bibliothek (aus node_modules)
 """
-import json, os, shutil, sys
+import json, re, os, shutil, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
@@ -22,7 +22,7 @@ def sample_files(d):
     files = []
     for dp, _, fs in os.walk(SAMPLE_DIR):
         for f in fs:
-            if f.endswith(('.sysml', '.kerml')):
+            if f.endswith(('.sysml', '.kerml')) or re.match(r'^tour(\.[a-z]{2})?\.json$', f):
                 p = os.path.join(dp, f)
                 files.append({'name': os.path.relpath(p, SAMPLE_DIR).replace(os.sep, '/'), 'text': read(p)})
     files.sort(key=lambda x: (x['name'].count('/'), x['name']))
@@ -36,6 +36,7 @@ def page():
         if f.endswith('.json'):
             langs[f[:-5]] = json.loads(read(SRC, 'lang', f))
     app = app.replace('/*I18N*/', json.dumps(langs, ensure_ascii=False))
+    app = app.replace('/*BOOK*/', json.dumps(json.loads(read(SRC, 'book.json')), ensure_ascii=False))
     p = read(SRC, 'page.html')
     p = p.replace('/*DIAGCSS*/', css).replace('/*APP*/', app).replace('/*CORE*/', read(SRC, 'core.js'))
     p = p.replace('/*SAMPLE*/', json.dumps({k: sample_files(d) for k, d in SAMPLES.items()}, ensure_ascii=False)).replace('/*DIAGCSS_STR*/', json.dumps(css.replace('\n', '')))

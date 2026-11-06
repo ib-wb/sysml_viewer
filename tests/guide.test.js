@@ -52,4 +52,29 @@ for (const [lang, dir, names] of [['de', 'indoorroboter', { mech: 'Mechanik', el
   assert.deepStrictEqual(rem.removed.map(r => r.qn), ['Tests'], lang + ': entferntes Paket fasst seinen Inhalt zusammen');
   assert.ok(rem.covChg.length >= 3 && rem.covChg.every(c => c.now === 'untested' || c.now === 'open'), lang + ': ohne Tests ist nichts mehr nachgewiesen');
 }
+// Umbenennung über die Kennung, Fachsichten, Tour-Dateien
+for (const [lang, dir, o] of [['de', 'indoorroboter', { def: 'Laufzeit', neu: 'Betriebsdauer', el: 'Elektronik', reqs: ['laufzeit', 'hindernis', 'scanrate'], bound: 'antrieb' }],
+                              ['en', 'indoor-robot', { def: 'Runtime', neu: 'OperatingTime', el: 'Electronics', reqs: ['runtime', 'obstacle', 'scanRate'], bound: 'drive' }]]) {
+  C.setLang(lang); const files = load(dir);
+  const B = snap(files); const re = new RegExp('\\b' + o.def + '\\b', 'g');
+  const d = C.diffSnapshots(B, snap(files.map(f => ({ name: f.name, text: f.text.replace(re, o.neu) }))));
+  assert.strictEqual(d.added.length + d.removed.length, 0, lang + ': Umbenennung darf nicht als entfernt + neu erscheinen');
+  assert.ok(d.changed.some(c => c.fields.some(f => f.f === 'name' && f.now.endsWith('::' + o.neu))), lang + ': Umbenennung erkannt');
+  assert.ok(!d.changed.some(c => c.qn.startsWith('Anforderungen::' + o.neu + '::') || c.qn.startsWith('Requirements::' + o.neu + '::')), lang + ': Kinder des umbenannten Elements sind keine eigene Änderung');
+
+  build(files);
+  const el = C.disciplines().find(x => x.name === o.el); const sc = C.disciplineScope(el);
+  assert.deepStrictEqual([...sc.reqs].map(r => r.name).sort(), o.reqs.slice().sort(), lang + ': Fachsicht – erfüllte Anforderungen');
+  assert.ok([...sc.bound].some(b => b.name === o.bound), lang + ': Fachsicht – Grenze zur Mechanik');
+  assert.ok(sc.tests.size === 2, lang + ': Fachsicht – Tests');
+  const ts = C.disciplineScope('test');
+  assert.strictEqual(ts.own.size, 2, lang + ': Fachsicht Test');
+
+  const tour = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../beispiel', dir, 'tour.json'), 'utf8'));
+  assert.ok(tour.steps.length >= 8 && tour.steps.length <= 10, lang + ': Tour hat 8 bis 10 Schritte');
+  for (const st of tour.steps) if (st.focus) {
+    const r = C.parseFiles(files); const I = C.buildIndex(r.root, {});
+    assert.ok(I.all.some(e => e.qn === st.focus), lang + ': Tour-Element fehlt im Modell: ' + st.focus);
+  }
+}
 console.log('guide.test.js: Disziplinen, Vergleich und Tour in de und en bestanden');

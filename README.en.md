@@ -16,22 +16,22 @@ Companion tool to the textbook *SysML v2, MBSE und ROS2 für Einsteiger* (German
 
 | View | Content |
 |---|---|
-| Start | The model in numbers and entry questions (“Which requirements are still open?”, “What is affected if I change a part?” …) that lead straight to the matching view |
+| Start | The model in numbers and guiding questions – “What does the system require?”, “What does it consist of?”, “How are the parts connected?”, “What is still open?”, “What happens if I change something?” – each leads straight to the matching view |
 | Coverage | Matrix requirement → implemented by (`satisfy`) → verified by (`verify`), gaps marked in red |
 | Traceability | Focus element with the columns requirements · structure · interfaces · behaviour · verification; a click moves the focus, “Your path” leads back |
 | Impact | What a change affects – with reach, reason and path for each element |
-| Disciplines | What belongs to mechanics, electronics, software …, which requirements each discipline satisfies, interfaces across discipline boundaries and software-on-hardware assignments; diagrams can be coloured by discipline |
-| Compare | Differences from a baseline (kept state, folder, files or – in VS Code – the last Git commit): new, removed and changed elements, requirements to re-prove, tests to repeat, coverage and model check before/after; marked in the diagrams |
+| Disciplines | Overview of what belongs to mechanics, electronics, software … and interfaces across discipline boundaries. **Discipline view**: pick one discipline or *Test* – then only its part counts (parts, ports, satisfied requirements, tests), all diagrams dim everything else and mark the parts on the boundary with a dashed frame |
+| Compare | Differences from a baseline (kept state, folder, files or – in VS Code – the last Git commit): new, removed, changed and renamed elements (same ID `<'R1'>` = same element), requirements to re-prove, tests to repeat, coverage and model check before/after; marked in the diagrams |
 
 **Learning aids**
 
 | Feature | What it does |
 |---|---|
-| Guided tour | Walks along the development path with an example from the loaded model: requirement → implementation → interface → behaviour → test → coverage → impact – with highlighting and the matching source line |
+| Guided tour | 8–10 steps from requirement to test. If a `tour.json` is in the model folder, it tells its text; otherwise the viewer generates the tour from the model |
 | Focus | One element stays selected across navigator, diagrams, detail view and model tree; diagrams automatically pick a context in which it appears and highlight it |
 | Profile | Describes the focus element in plain language: what it is, what it consists of, what it is connected to, which requirement it satisfies, which test checks it, what a change affects – gaps in red |
 | Model check | Errors (dangling references, unknown types, mismatched port directions), gaps (requirement without implementation or test, test without requirement) and hints (open ports, components without a requirement, unused definitions) – each with a reason, a jump to the source and a code suggestion |
-| Explain notation | On mouse-over the viewer explains lines, arrowheads, ports, square and rounded boxes, `^`, `:>>`, stereotypes and relationships – with a SysML example; can be switched off |
+| Explain notation | On mouse-over the viewer explains lines, arrowheads, ports, square and rounded boxes, `^`, `:>>`, stereotypes and relationships – with a SysML example and, if filled in, the book chapter; can be switched off |
 
 **Diagrams**: overview grouped by file, connections (IBD with ports), states, actions, requirements; clicking a part opens a detail diagram (inheritance, usage, satisfied requirements, internal structure). Name collisions across files are reported and can be resolved by choosing the valid definition. Export as SVG or PNG.
 
@@ -82,6 +82,35 @@ part def Battery { @Electronics; }    // or in the body
 
 Usages inherit the discipline of their definition, definitions that of their more general definition. If an element has several, the first one counts.
 
+## Your own tour
+
+A `tour.json` (or `tour.de.json`, `tour.en.json` per language) in the model folder replaces the generated tour. The viewer reads it along with the model; it also appears in the file list and can be edited there.
+
+```json
+{
+  "title": "From requirement to verification",
+  "steps": [
+    { "show": "reqs", "title": "What does the system require?", "text": "Five requirements …" },
+    { "focus": "Requirements::robotRequirements::runtime", "show": "trace", "code": true,
+      "title": "R1: two hours of runtime", "text": "…", "chapter": "Ch. 6" }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `title`, `text` | Heading and explanation of the step |
+| `focus` | Element in focus: qualified name (`Package::Element`) or simple name |
+| `show` | `start`, `reqs`, `struct`, `ibd`, `states`, `actions`, `diagram` (matching diagram for the focus), `cover`, `gaps`, `trace`, `impact`, `check`, `disc`, `diff` |
+| `code` | `true` = source line of the element, or your own code snippet |
+| `chapter` | Reference into the book, shown below the text |
+
+The sample project contains a nine-step draft. The test checks that every `focus` element exists in the model and that the tour has 8–10 steps.
+
+## Book chapters for the notation explanations
+
+`src/book.json` maps each notation to a chapter, e.g. `"e-iface": "Ch. 9.2 Interfaces"`. Empty entries are not shown. The keys are prefilled: `e-…` lines in diagrams, `c-…` compartments in boxes, `r-…` relationships in the profile, plus element kinds (`part def`, `port` …). Run `npm run build` afterwards.
+
 ## Sample project
 
 A complete sample with two deliberate gaps is in `beispiel/indoor-robot/`, with identical content in German in `beispiel/indoorroboter/`. The viewer shows the sample in the selected language; switching the language swaps it as long as you have not edited it.
@@ -120,10 +149,11 @@ src/                 viewer sources
   page.html          page skeleton and styles
   diag.css           diagram styles (also used for SVG export)
   lang/              UI texts per language: de.json (base), en.json, …
+  book.json          book chapters for the notation explanations
 tools/build.py       builds dist/ and the extension webview
 dist/                ready-to-use browser version
 vscode-extension/    VS Code extension (extension.js, package.json, media/)
-beispiel/            indoor robot sample, 6 files each: indoorroboter/ (de), indoor-robot/ (en)
+beispiel/            indoor robot sample, 6 model files and tour.json each: indoorroboter/ (de), indoor-robot/ (en)
 tests/               parser, traceability, profile, check and language tests; extension test against a VS Code mock
   fixtures/          deliberately faulty model for the model check
 ```

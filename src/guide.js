@@ -14,21 +14,25 @@ function renderStart(body) {
   const tests = IDX.all.filter(e => stageOf(e) === 'test' && e.name && !e.anon && !trIn(e, 'typed').length);
   const dv = disciplines(), dview = dv.length ? disciplineView() : null;
   const D = S.base ? getDiff() : null, nDiff = D ? D.d.added.length + D.d.removed.length + D.d.changed.length : 0;
-  const steps = buildTour().length;
+  const steps = buildTour().length, tf = tourFile();
   const opt = list => list.map(e => `<option value="${e.eid}">${esc(dispName(e))}</option>`).join('');
+  const fachOpts = [...dv.map(d => `<option value="${esc(d.name)}">${esc(d.name)}</option>`), `<option value="test">${esc(L('disc.test'))}</option>`].join('');
+  // Reihenfolge: Tour, dann die fünf Leitfragen, dann Vertiefungen
   const Q = [
-    { id: 'tour', a: L('start.a.tour', { n: steps }), btn: L('start.b.tour'), lead: true },
-    { id: 'struct', a: L('start.a.struct', { parts: Ln('start.n.parts', comps.length), links: Ln('start.n.links', TR.links.length) }), btn: L('start.b.struct') },
+    { id: 'tour', a: tf && tf.title ? L('start.a.tourFile', { n: steps, title: tf.title }) : L('start.a.tour', { n: steps }), btn: L('start.b.tour'), lead: true },
+    { id: 'reqs', a: cov.length ? Ln('start.a.reqs', cov.length) : L('start.a.noReqs'), btn: L('start.b.reqs') },
+    { id: 'struct', a: Ln('start.a.struct', comps.length), btn: L('start.b.struct') },
+    { id: 'links', a: Ln('start.a.links', TR.links.length), btn: L('start.b.links') },
     { id: 'gaps', a: cov.length ? Ln('start.a.gaps', gaps, { total: cov.length }) : L('start.a.noReqs'), btn: L('start.b.gaps') },
-    { id: 'how', a: L('start.a.how'), sel: cov.map(r => r.el), btn: L('start.b.how') },
     { id: 'change', a: L('start.a.change'), sel: comps, btn: L('start.b.change') },
+    { id: 'how', a: L('start.a.how'), sel: cov.map(r => r.el), btn: L('start.b.how') },
+    { id: 'disc', a: dv.length ? L('start.a.disc') : L('start.a.discNone'), selHtml: fachOpts, btn: L('start.b.disc') },
     { id: 'check', a: nErr || nGap ? L('start.a.check', { err: Ln('sev.n.error', nErr), gap: Ln('sev.n.gap', nGap) }) : L('start.a.checkClean'), btn: L('start.b.check') },
-    { id: 'disc', a: dview ? L('start.a.disc', { list: Lj(dv.map(d => d.name)), n: Ln('start.n.cross', dview.cross.length) }) : L('start.a.discNone'), btn: L('start.b.disc') },
     { id: 'diff', a: S.base ? Ln('start.a.diff', nDiff, { name: S.base.name }) : L('start.a.diffNone'), btn: L('start.b.diff') }
   ];
   body.innerHTML = `
   <div class="cov-sum">
-    <div class="tile"><b>${S.files.length}</b><span>${esc(Ln('start.t.files', S.files.length))}</span></div>
+    <div class="tile"><b>${S.files.filter(f => !isTourFile(f.name)).length}</b><span>${esc(Ln('start.t.files', S.files.filter(f => !isTourFile(f.name)).length))}</span></div>
     <div class="tile"><b>${cov.length}</b><span>${esc(L('cov.reqs'))}</span></div>
     <div class="tile"><b>${comps.length}</b><span>${esc(L('nav.components'))}</span></div>
     <div class="tile"><b>${TR.links.length}</b><span>${esc(L('start.t.links'))}</span></div>
@@ -38,19 +42,27 @@ function renderStart(body) {
   <h3 class="sh">${esc(L('start.title'))}</h3>
   <div class="qgrid">${Q.map(q => `<div class="qcard${q.lead ? ' lead' : ''}" data-qcard="${q.id}">
       <b>${esc(L('start.q.' + q.id))}</b><span>${esc(q.a)}</span>
-      <div class="qact">${q.sel ? (q.sel.length ? `<select data-qsel="${q.id}" aria-label="${esc(L('start.q.' + q.id))}">${opt(q.sel)}</select>` : '') : ''}
+      <div class="qact">${q.selHtml ? `<select aria-label="${esc(L('start.q.' + q.id))}">${q.selHtml}</select>` : q.sel ? (q.sel.length ? `<select aria-label="${esc(L('start.q.' + q.id))}">${opt(q.sel)}</select>` : '') : ''}
       ${!q.sel || q.sel.length ? `<button type="button" class="btn${q.lead ? ' primary' : ''}" data-q="${q.id}">${esc(q.btn)}</button>` : ''}</div>
     </div>`).join('')}</div>`;
 }
 function startAction(id, sel) {
-  const el = sel ? elByEid(sel.value) : null;
+  const el = sel && id !== 'disc' ? elByEid(sel.value) : null;
   if (id === 'tour') return startTour();
-  if (id === 'struct') { S.view = ibdCandidates().length ? 'ibd' : 'struct'; store.set('view', S.view); delete S.ctxFocus[S.view]; setMode('diag'); renderTabs(); return; }
+  const view = { reqs: 'reqs', struct: 'struct', links: ibdCandidates().length ? 'ibd' : 'struct' }[id];
+  if (view) return showView(view);
+  if (id === 'disc') setFach(sel ? sel.value : '', true);
   if (id === 'gaps') { NAV.gaps = true; NAV.tab = 'cover'; }
   if (id === 'how' && el) return navGo(el, 'trace');
   if (id === 'change' && el) return navGo(el, 'impact');
   if (['check', 'disc', 'diff'].includes(id)) NAV.tab = id;
   saveHist(); renderNav(); $('nbody').scrollTop = 0;
+}
+function showView(v, el) {
+  S.view = v; store.set('view', v); delete S.ctxFocus[v];
+  if (el) setFocus(el);
+  closeDetail(); if (S.mode !== 'diag') setMode('diag'); else update(true);
+  renderTabs();
 }
 $('nbody').addEventListener('click', e => {
   const q = e.target.closest('[data-q]'); if (!q) return;
@@ -61,17 +73,61 @@ $('nbody').addEventListener('click', e => {
 S.discColor = store.get('disccolor') === '1';
 const discIdx = d => d ? disciplines().indexOf(d) % 6 : -1;
 const discDot = d => `<i class="ddot dc-${discIdx(d)}"></i>`;
+/* Fachsicht: eine Disziplin (oder Test) wählen – nur ihr Teil zählt, die Grenzen zu den anderen sind hervorgehoben */
+S.discFocus = store.get('discfocus') || '';
+let fachCache = null;
+function fachObj() { if (!S.discFocus || !IDXok) return null; if (S.discFocus === 'test') return 'test'; return disciplines().find(d => d.name === S.discFocus) || null; }
+function fachScope() { const f = fachObj(); if (!f) return null; if (!fachCache || fachCache.res !== parseRes || fachCache.f !== f) fachCache = { res: parseRes, f, sc: disciplineScope(f) }; return fachCache.sc; }
+const fachName = f => f === 'test' ? L('disc.test') : f ? f.name : '';
+function setFach(v, quiet) {
+  S.discFocus = v || ''; store.set('discfocus', S.discFocus); fachCache = null;
+  updateFachBadge();
+  if (S.mode === 'nav') renderNav(); else markFocus($('vp'));
+  if (!quiet && S.discFocus) toast(L('fach.on', { name: fachName(fachObj()) }));
+}
+function updateFachBadge() {
+  const b = $('fachBadge'); if (!b) return; const f = fachObj();
+  b.hidden = !f; if (f) b.innerHTML = `${esc(L('fach.badge', { name: fachName(f) }))}<button type="button" data-fach="" aria-label="${esc(L('fach.clear'))}" title="${esc(L('fach.clear'))}">×</button>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-fach]'); if (b) setFach(b.dataset.fach); });
+function fachChips(list) {
+  return `<div class="fchips" role="group" aria-label="${esc(L('fach.label'))}"><span class="muted">${esc(L('fach.label'))}</span>
+    <button type="button" class="fchip${!S.discFocus ? ' on' : ''}" data-fach="">${esc(L('fach.all'))}</button>
+    ${list.map(d => `<button type="button" class="fchip${S.discFocus === d.name ? ' on' : ''}" data-fach="${esc(d.name)}">${discDot(d)}${esc(d.name)}</button>`).join('')}
+    <button type="button" class="fchip${S.discFocus === 'test' ? ' on' : ''}" data-fach="test"><i class="ddot s-test"></i>${esc(L('disc.test'))}</button></div>`;
+}
+function renderFach(body, f, v) {
+  const sc = fachScope(); const chips = list => list.length ? list.map(elBtn).join('') : `<span class="muted">–</span>`;
+  const col = (title, list, cls) => `<div class="dcol ${cls || ''}"><header><b>${esc(title)}</b><span class="muted">${list.length}</span></header><div class="dlist">${chips(list)}</div></div>`;
+  const own = [...sc.own], parts = own.filter(e => e.kind !== 'port' && stageOf(e) !== 'test'), ports = own.filter(e => e.kind === 'port');
+  const rows = coverage(); const reqs = [...sc.reqs];
+  const side = (u, d, p) => `<span class="dside">${discDot(d)}${elBtn(u)}${p && p !== u ? `<span class="muted mono">.${esc(p.name || '')}</span>` : ''}</span>`;
+  let html = fachChips(v.list) + `<p class="chk-intro">${esc(L(f === 'test' ? 'fach.leadTest' : 'fach.lead', { name: fachName(f) }))}</p>`;
+  if (f === 'test') {
+    const untested = rows.filter(r => r.status !== 'group' && !r.ver.length).map(r => r.el);
+    html += `<div class="dgrid">${col(L('fach.tests'), own)}${col(L('fach.reqsChecked'), reqs.filter(r => rows.some(x => x.el === r && x.ver.length)))}${col(L('fach.untested'), untested, untested.length ? 'warn' : '')}${col(L('fach.subjects'), [...sc.bound], 'bound')}</div>`;
+  } else {
+    html += `<div class="dgrid">${col(L('fach.parts'), parts)}${col(L('fach.ports'), ports)}${col(L('fach.reqs'), reqs)}${col(L('fach.tests'), [...sc.tests])}${col(L('fach.bound'), [...sc.bound], 'bound')}</div>`;
+    const cross = v.cross.filter(c => c.da === f || c.db === f), alloc = v.alloc.filter(a => a.da === f || a.db === f);
+    html += `<h3 class="sh">${esc(L('fach.crossTitle', { name: f.name }))}</h3>` + (cross.length || alloc.length ? `<ul class="dx">${cross.map(c => `<li>${side(c.ua, c.da, c.pa)}<span class="dvia">${esc(c.type)}${c.label ? ' · ' + esc(c.label) : ''} ${c.type === 'flow' ? '→' : '↔'}</span>${side(c.ub, c.db, c.pb)}${locBtn(c.file, c.line)}</li>`).join('')}${alloc.map(a => `<li>${side(a.a, a.da)}<span class="dvia">${esc(L('disc.runsOn.' + a.type))}</span>${side(a.b, a.db)}${locBtn(a.file, a.line)}</li>`).join('')}</ul>` : `<p class="muted">${esc(L('disc.noCross'))}</p>`);
+  }
+  html += `<div class="dbtns"><button type="button" class="btn primary" data-fachdiag="${f === 'test' ? 'reqs' : 'ibd'}">${esc(L('fach.showDiagram'))}</button></div><p class="muted chk-intro">${esc(L('fach.diagramHint'))}</p>`;
+  body.innerHTML = html;
+}
+$('nbody').addEventListener('click', e => { const b = e.target.closest('[data-fachdiag]'); if (b) showView(b.dataset.fachdiag === 'ibd' && !ibdCandidates().length ? 'struct' : b.dataset.fachdiag); });
 function renderDisc(body) {
   const v = disciplineView();
+  const f = fachObj();
+  if (f) return renderFach(body, f, v);
   if (!v.list.length) {
-    body.innerHTML = `<div class="nempty"><h3>${esc(L('disc.emptyTitle'))}</h3><p>${esc(L('disc.emptyText'))}</p><pre>${esc(L('disc.emptyCode'))}</pre><p>${esc(L('disc.emptyHint'))}</p></div>`;
+    body.innerHTML = fachChips([]) + `<div class="nempty"><h3>${esc(L('disc.emptyTitle'))}</h3><p>${esc(L('disc.emptyText'))}</p><pre>${esc(L('disc.emptyCode'))}</pre><p>${esc(L('disc.emptyHint'))}</p></div>`;
     return;
   }
   const grp = g => `<div class="dcol"><header>${g.d ? discDot(g.d) : '<i class="ddot"></i>'}<b>${esc(g.d ? g.d.name : L('disc.none'))}</b><span class="muted">${g.els.length}</span></header>
     <div class="dlist">${g.els.map(elBtn).join('') || `<span class="muted">–</span>`}</div>
     ${g.reqs.length ? `<div class="dreq"><span class="muted">${esc(L('disc.satisfies'))}</span>${g.reqs.map(elBtn).join('')}</div>` : ''}</div>`;
   const side = (u, d, p) => `<span class="dside">${discDot(d)}${elBtn(u)}${p && p !== u ? `<span class="muted mono">.${esc(p.name || '')}</span>` : ''}</span>`;
-  body.innerHTML = `<p class="muted chk-intro">${esc(L('disc.lead'))}</p>
+  body.innerHTML = fachChips(v.list) + `<p class="muted chk-intro">${esc(L('disc.lead'))}</p>
     <div class="cov-ctl"><label><input type="checkbox" id="discColor"${S.discColor ? ' checked' : ''}> ${esc(L('disc.color'))}</label>
       <span class="dleg">${v.list.map(d => `<span>${discDot(d)}${esc(d.name)}</span>`).join('')}</span></div>
     <div class="dgrid">${v.groups.filter(g => g.d || g.els.length).map(grp).join('')}</div>
@@ -181,6 +237,15 @@ function markExtras(vp) {
   if (!vp || !IDXok) return;
   vp.querySelectorAll('.dc, .df-add, .df-chg').forEach(n => n.classList.remove('dc', 'dc-0', 'dc-1', 'dc-2', 'dc-3', 'dc-4', 'dc-5', 'df-add', 'df-chg'));
   if (S.discColor) vp.querySelectorAll('g.nd[data-eid]').forEach(n => { const el = elByEid(n.dataset.eid); const d = el && disciplineOf(el); if (d) n.classList.add('dc', 'dc-' + discIdx(d)); });
+  vp.querySelectorAll('.fdim, .fbound').forEach(n => n.classList.remove('fdim', 'fbound'));
+  const sc = fachScope();
+  if (sc) vp.querySelectorAll('g.nd[data-eid], g.port[data-eid]').forEach(n => {
+    const el = elByEid(n.dataset.eid); if (!el) return;
+    if (n.querySelector(':scope > .nb.frame')) { if (sc.bound.has(el)) n.classList.add('fbound'); return; } // Rahmen nie abblenden, sonst verschwindet ihr Inhalt
+    if (sc.own.has(el) || sc.reqs.has(el) || sc.tests.has(el)) return;
+    n.classList.add(sc.bound.has(el) ? 'fbound' : 'fdim');
+  });
+  updateFachBadge();
   const D = S.diffMark && S.base ? getDiff() : null;
   if (D) {
     const add = new Set(D.d.added.map(c => c.key)), chg = new Set(D.d.changed.map(c => c.key));
@@ -192,8 +257,36 @@ function markExtras(vp) {
 
 /* ---------- Geführte Tour ---------- */
 const TOUR = { on: false, i: 0, steps: [], hl: null };
+// Eigene Tour: tour.<sprache>.json oder tour.json im Modellordner (Format siehe README). Sonst wird eine Tour aus dem Modell erzeugt.
+function tourFile() {
+  const f = S.files.find(x => new RegExp('(^|/)tour\\.' + LANG + '\\.json$', 'i').test(x.name)) || S.files.find(x => /(^|\/)tour\.json$/i.test(x.name));
+  if (!f) return null;
+  try { const t = JSON.parse(f.text); if (!t || !Array.isArray(t.steps) || !t.steps.length) return null; t.file = f.name; return t; }
+  catch (e) { return { error: e.message, file: f.name }; }
+}
+function findEl(ref) {
+  if (!ref) return null;
+  const hit = IDX.all.filter(e => e.qn === ref); if (hit.length) return hit.find(e => stageOf(e)) || hit[0];
+  const byName = IDX.all.filter(e => e.name === ref && !e.anon); return byName.find(e => stageOf(e) && !e.isDef) || byName.find(e => stageOf(e)) || byName[0] || null;
+}
+const NAV_SHOW = ['start', 'check', 'cover', 'gaps', 'trace', 'impact', 'disc', 'diff'], DIAG_SHOW = ['struct', 'ibd', 'states', 'actions', 'reqs', 'diagram'];
+function fileTour(t) {
+  return t.steps.slice(0, 20).map(st => {
+    const el = findEl(st.focus); const show = st.show || (el ? 'trace' : 'start');
+    const run = () => {
+      if (DIAG_SHOW.includes(show)) { if (show === 'diagram' && el) { setFocus(el); showInDiagram(el); } else showView(show === 'diagram' ? 'struct' : show, el); return; }
+      if ((show === 'trace' || show === 'impact') && el) return navGo(el, show);
+      if (el) setFocus(el);
+      if (S.mode !== 'nav') setMode('nav');
+      NAV.gaps = show === 'gaps'; NAV.tab = show === 'gaps' ? 'cover' : NAV_SHOW.includes(show) ? show : 'start'; saveHist(); renderNav(); $('nbody').scrollTop = 0;
+    };
+    const code = st.code === true ? (el ? srcLine(el.file, el.line) : '') : (typeof st.code === 'string' ? st.code : '');
+    return { title: st.title || '', text: (st.text || '') + (st.focus && !el ? ' ' + L('tour.notFound', { x: st.focus }) : ''), code, chapter: st.chapter || '', run, target: DIAG_SHOW.includes(show) ? '#stage' : (show === 'trace' || show === 'impact') && el ? '#focusBar' : '#nbody' };
+  });
+}
 function buildTour() {
   if (!IDXok) return [];
+  const tf = tourFile(); if (tf && !tf.error) return fileTour(tf);
   const P = tourPlan(); const st = [];
   const edgeLine = (t, a, b) => TR.edges.find(e => e.type === t && e.a === a && e.b === b);
   const code = (el) => el ? srcLine(el.file, el.line) : '';
@@ -210,8 +303,6 @@ function buildTour() {
   if (P.req) st.push({ k: 'cover', p: { gap: P.gap ? nmOf(P.gap) : '' }, k2: P.gap ? 'cover' : 'coverOk', run: () => { NAV.gaps = false; nav('cover')(); }, target: '#nbody .tblwrap' });
   if (P.impl) st.push({ k: 'impact', p: { impl: nmOf(P.impl) }, run: () => navGo(P.impl, 'impact'), target: '#nbody' });
   st.push({ k: 'check', p: {}, run: nav('check'), target: '#ntabs' });
-  if (disciplines().length) st.push({ k: 'disc', p: { list: Lj(disciplines().map(d => d.name)) }, run: nav('disc'), target: '#nbody' });
-  st.push({ k: 'diff', p: {}, run: nav('diff'), target: '#nbody' });
   st.push({ k: 'end', p: {}, run: nav('start'), target: '#nbody' });
   return st;
 }
@@ -222,15 +313,16 @@ function tourPanel() {
   t.addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; const a = b.dataset.t; if (a === 'next') tourGo(TOUR.i + 1); if (a === 'prev') tourGo(TOUR.i - 1); if (a === 'end') endTour(); });
   return t;
 }
-function startTour() { TOUR.steps = buildTour(); TOUR.on = true; tourGo(0); }
+function startTour() { const tf = tourFile(); if (tf && tf.error) toast(L('tour.fileError', { file: tf.file, msg: tf.error })); TOUR.steps = buildTour(); TOUR.on = true; tourGo(0); }
 function endTour() { TOUR.on = false; const t = $('tour'); if (t) t.hidden = true; if (TOUR.hl) TOUR.hl.classList.remove('tour-hl'); TOUR.hl = null; }
 function tourGo(i) {
   if (i < 0) return; if (i >= TOUR.steps.length) { endTour(); toast(L('tour.done')); return; }
   TOUR.i = i; const s = TOUR.steps[i];
   try { s.run(); } catch (e) { console.error(e); }
   const t = tourPanel(); const key = 'tour.' + (s.k2 || s.k);
+  const title = s.k ? L(key + '.t', s.p) : s.title, text = s.k ? L(key + '.x', s.p) : s.text;
   t.innerHTML = `<div class="th"><span class="muted">${esc(L('tour.step', { i: i + 1, n: TOUR.steps.length }))}</span><button type="button" class="tx" data-t="end" aria-label="${esc(L('tour.end'))}" title="${esc(L('tour.end'))}">×</button></div>
-    <b>${esc(L(key + '.t', s.p))}</b><p>${esc(L(key + '.x', s.p))}</p>${s.code ? `<code>${esc(s.code)}</code>` : ''}
+    <b>${esc(title)}</b><p>${esc(text)}</p>${s.code ? `<code>${esc(s.code)}</code>` : ''}${s.chapter ? `<em class="tref">${esc(L('tip.book', { ref: s.chapter }))}</em>` : ''}
     <div class="tb"><button type="button" class="btn" data-t="prev"${i ? '' : ' disabled'}>${esc(L('tour.prev'))}</button><span class="tdots">${TOUR.steps.map((x, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</span><button type="button" class="btn primary" data-t="next">${esc(L(i === TOUR.steps.length - 1 ? 'tour.finish' : 'tour.next'))}</button></div>`;
   t.hidden = false;
   if (TOUR.hl) TOUR.hl.classList.remove('tour-hl'); TOUR.hl = null;

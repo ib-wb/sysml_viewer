@@ -1,0 +1,60 @@
+{
+  "title": "Von der Anforderung zum Nachweis",
+  "_hinweis": "Entwurf – Texte bitte überarbeiten. Felder je Schritt: title, text, focus (qualifizierter Name oder Name), show (start, reqs, struct, ibd, states, actions, diagram, cover, gaps, trace, impact, check, disc, diff), code (true = Quelltextzeile des Elements, oder eigener Text), chapter (Buchverweis).",
+  "steps": [
+    {
+      "show": "start",
+      "title": "Willkommen beim Indoorroboter",
+      "text": "Der Roboter fährt selbstständig durch Innenräume, weicht Hindernissen aus und fährt zum Laden an die Station. Die Tour verfolgt eine einzige Anforderung – von der Forderung bis zum Nachweis."
+    },
+    {
+      "show": "reqs",
+      "title": "Was fordert das System?",
+      "text": "Fünf Anforderungen beschreiben, was der Roboter können muss, jede mit einer ID wie A1 und einem Text. A2.1 Scanrate ist aus A2 Hinderniserkennung abgeleitet."
+    },
+    {
+      "focus": "Anforderungen::roboterAnforderungen::laufzeit",
+      "show": "trace",
+      "code": true,
+      "title": "A1: zwei Stunden Laufzeit",
+      "text": "Wir folgen A1. Oben steht die Anforderung im Fokus, darunter der Steckbrief in Klartext: Wer setzt sie um, wer prüft sie?"
+    },
+    {
+      "focus": "Struktur::Roboter::akku",
+      "show": "trace",
+      "code": "satisfy Anforderungen::roboterAnforderungen.laufzeit by roboter.akku;",
+      "title": "Der Akku setzt A1 um",
+      "text": "Die Zeile satisfy … by … im Paket System verbindet Anforderung und Komponente. Ohne sie gäbe es keine Rückverfolgung."
+    },
+    {
+      "focus": "Struktur::Roboter::akku",
+      "show": "ibd",
+      "title": "Wie der Akku angeschlossen ist",
+      "text": "Über den Port ausgang versorgt der Akku Steuerrechner, Lidar und Antrieb. Alle drei Verbindungen sind vom Typ Versorgung."
+    },
+    {
+      "focus": "Verhalten::Betriebszustaende",
+      "show": "states",
+      "title": "Was der Roboter tut",
+      "text": "Die Zustandsmaschine zeigt Bereit, Navigation und Laden. Meldet der Akku AkkuNiedrig, wechselt der Roboter ins Laden – hier hängt das Verhalten an der Laufzeit."
+    },
+    {
+      "focus": "Tests::LaufzeitTest",
+      "show": "trace",
+      "code": true,
+      "title": "Der Nachweis: LaufzeitTest",
+      "text": "Ein Dauerlauf mit voll geladenem Akku. Das verify im objective verbindet den Test mit A1. Damit ist die Kette geschlossen: gefordert, umgesetzt, nachgewiesen."
+    },
+    {
+      "show": "gaps",
+      "title": "Was ist noch offen?",
+      "text": "A3 Gewicht ist umgesetzt, aber nicht getestet. A4 Not-Aus hat weder Umsetzung noch Test. Beides sind absichtliche Lücken zum Üben."
+    },
+    {
+      "focus": "Struktur::Akku",
+      "show": "impact",
+      "title": "Was passiert, wenn sich der Akku ändert?",
+      "text": "Ein anderer Akku betrifft den Roboter, die Anforderung A1 und den LaufzeitTest. Die Auswirkung zeigt jeden Schritt mit Begründung."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 /* ================= App ================= */
 const SAMPLES = /*SAMPLE*/; // Beispielprojekt je Sprache
+const BOOK = /*BOOK*/; // Buchkapitel zu den Notationserklärungen (src/book.json)
 const DIAG_CSS = /*DIAGCSS_STR*/;
 const TOKENS = ['--ink','--muted','--edge','--canvas','--n-bg','--n-part','--n-item','--n-port','--n-attr','--n-req','--n-state','--n-action','--n-usage','--port','--flow','--accent','--warn'];
 const $ = s => document.getElementById(s);
@@ -59,9 +60,10 @@ try { Object.assign(S.opts, JSON.parse(store.get('opts') || '{}')); Object.assig
 const keyOf = el => el ? (el.qn || el.name || '') + '|' + el.kind + '|' + (el.isDef ? 'd' : 'u') + (el.anon || !el.name ? '|' + el.file + ':' + el.line : '') : '';
 const findByKey = k => IDX && IDX.all.find(e => keyOf(e) === k);
 const packages = () => IDX.all.filter(e => e.kind === 'package' && e.name);
-const fileCands = () => S.files.length > 1 ? S.files.map(f => ({ key: 'file:' + f.name, get label() { return L('ui.ctx.file', { name: f.name }); }, file: f.name })) : [];
+const modelFiles = () => S.files.filter(f => !isTourFile(f.name));
+const fileCands = () => modelFiles().length > 1 ? modelFiles().map(f => ({ key: 'file:' + f.name, get label() { return L('ui.ctx.file', { name: f.name }); }, file: f.name })) : [];
 const VIEWS = {
-  struct: { get label() { return L('view.struct'); }, needs: false, cands: () => [{ key: '', label: S.files.length > 1 ? L('ui.ctx.allFiles', { n: S.files.length }) : L('ui.ctx.whole') }, ...fileCands(), ...packages().map(p => ({ key: keyOf(p), label: L('ui.ctx.package', { name: p.qn }), el: p }))], build: c => viewStruct(c.el || (c.file ? fileScope(c.file) : null), S.opts) },
+  struct: { get label() { return L('view.struct'); }, needs: false, cands: () => [{ key: '', label: modelFiles().length > 1 ? L('ui.ctx.allFiles', { n: modelFiles().length }) : L('ui.ctx.whole') }, ...fileCands(), ...packages().map(p => ({ key: keyOf(p), label: L('ui.ctx.package', { name: p.qn }), el: p }))], build: c => viewStruct(c.el || (c.file ? fileScope(c.file) : null), S.opts) },
   ibd: { get label() { return L('view.ibd'); }, needs: true, cands: () => ibdCandidates().map(e => ({ key: keyOf(e), label: (e.isDef ? kindLabel(e) + ' ' : '') + e.name + (!e.isDef && e.types[0] ? ' : ' + shortT(e.types[0]) : ''), el: e })), build: c => viewIBD(c.el, S.opts.depth), get none() { return L('view.ibd.none'); } },
   states: { get label() { return L('view.states'); }, needs: true, cands: () => stateCandidates().map(e => ({ key: keyOf(e), label: (e.isDef ? 'state def ' : 'state ') + e.name, el: e })), build: c => viewStates(c.el), get none() { return L('view.states.none'); } },
   actions: { get label() { return L('view.actions'); }, needs: true, cands: () => actionCandidates().map(e => ({ key: keyOf(e), label: (e.isDef ? 'action def ' : 'action ') + e.name, el: e })), build: c => viewActions(c.el), get none() { return L('view.actions.none'); } },
@@ -145,7 +147,7 @@ function reparse() {
   try { parseRes = parseFiles(S.files); buildIndex(parseRes.root, S.pick); IDXok = true; }
   catch (e) { console.error(e); IDXok = false; $('stat').textContent = L('ui.parseError', { msg: e.message }); return; }
   const nRel = IDX.all.reduce((a, e) => a + e.rels.length, 0) + IDX.root.rels.length;
-  const nf = S.files.length;
+  const nf = modelFiles().length;
   $('stat').textContent = [nf > 1 ? Ln('ui.stat.files', nf) : null, L('ui.stat.model', { el: Ln('count.elements', IDX.all.length), rel: Ln('ui.stat.rels', nRel) }), parseRes.warns.length ? Ln('ui.stat.warns', parseRes.warns.length) : L('ui.stat.noWarns')].filter(Boolean).join(' · ');
   $('nEl').textContent = IDX.all.length;
   try { buildTrace(); } catch (e) { console.error(e); }
@@ -221,7 +223,7 @@ function renderTabs() {
 function renderOpts() {
   const o = $('opts'); o.innerHTML = '';
   const cb = (key, label) => { const l = document.createElement('label'); l.innerHTML = `<input type="checkbox" id="o_${key}"${S.opts[key] ? ' checked' : ''}> ${label}`; l.querySelector('input').onchange = e => { S.opts[key] = e.target.checked; store.set('opts', JSON.stringify(S.opts)); update(true); }; o.appendChild(l); };
-  if (S.view === 'struct') { if (S.files.length > 1) cb('byFile', esc(L('opt.byFile'))); for (const k of ['feats', 'ports', 'attrs', 'behav', 'usages']) cb(k, esc(L('opt.' + k))); }
+  if (S.view === 'struct') { if (modelFiles().length > 1) cb('byFile', esc(L('opt.byFile'))); for (const k of ['feats', 'ports', 'attrs', 'behav', 'usages']) cb(k, esc(L('opt.' + k))); }
   if (S.view === 'ibd') {
     const l = document.createElement('label'); l.innerHTML = esc(L('opt.depth')) + ' <select id="o_depth"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>';
     const sel = l.querySelector('select'); sel.value = String(S.opts.depth); sel.onchange = e => { S.opts.depth = +e.target.value; store.set('opts', JSON.stringify(S.opts)); update(true); }; o.appendChild(l);
@@ -359,7 +361,7 @@ function renderFileSel() {
   const wc = {}; for (const w of parseRes.warns) wc[w.file] = (wc[w.file] || 0) + 1;
   sel.innerHTML = S.files.map((f, i) => `<option value="${i}">${esc(f.name)}${wc[f.name] ? ' · ' + wc[f.name] + ' Hinweis' + (wc[f.name] > 1 ? 'e' : '') : ''}</option>`).join('');
   sel.value = String(S.active); sel.disabled = S.files.length < 2;
-  $('project').textContent = projName() + (S.files.length > 1 ? ' · ' + Ln('ui.stat.files', S.files.length) : '');
+  $('project').textContent = projName() + (modelFiles().length > 1 ? ' · ' + Ln('ui.stat.files', modelFiles().length) : '');
   $('reloadBtn').hidden = !S.dirHandle;
 }
 $('fileSel').onchange = e => { showFile(+e.target.value); };
@@ -437,12 +439,13 @@ function navigateTo(el) {
 
 /* ---------- Dateien & Ordner einlesen ---------- */
 const isModelFile = n => /\.(sysml|kerml)$/i.test(n);
+const isTourFile = n => /(^|\/)tour(\.[a-z]{2})?\.json$/i.test(n); // eigene Tour im Modellordner
 const SKIP_DIR = /(^|\/)(\.git|node_modules|\.venv|__pycache__|build|dist)(\/|$)/;
 async function filesFromList(list) {
   const out = [];
   for (const f of list) {
     const path = (f.webkitRelativePath || f.relPath || f.name);
-    if (!isModelFile(path) || SKIP_DIR.test(path) || f.size > 5e6) continue;
+    if (!(isModelFile(path) || isTourFile(path)) || SKIP_DIR.test(path) || f.size > 5e6) continue;
     out.push({ name: path, text: await f.text() });
   }
   return out;
@@ -467,7 +470,7 @@ async function readDirHandle(h, prefix, out) {
   for await (const [name, child] of h.entries()) {
     const p = prefix ? prefix + '/' + name : name;
     if (child.kind === 'directory') { if (!SKIP_DIR.test(p + '/')) await readDirHandle(child, p, out); }
-    else if (isModelFile(name)) { const f = await child.getFile(); f.relPath = p; out.push(f); }
+    else if (isModelFile(name) || isTourFile(name)) { const f = await child.getFile(); f.relPath = p; out.push(f); }
   }
   return out;
 }

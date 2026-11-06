@@ -16,22 +16,22 @@ Begleitwerkzeug zum Lehrbuch *SysML v2, MBSE und ROS2 für Einsteiger* (Wolfgang
 
 | Sicht | Inhalt |
 |---|---|
-| Start | Modell in Zahlen und Einstiegsfragen („Welche Anforderungen sind offen?“, „Was ist betroffen, wenn ich ein Teil ändere?“ …), die direkt in die passende Sicht führen |
+| Start | Modell in Zahlen und Leitfragen – „Was fordert das System?“, „Woraus besteht es?“, „Wie hängen die Teile zusammen?“, „Was ist noch offen?“, „Was passiert, wenn ich etwas ändere?“ – jede führt direkt in die passende Sicht |
 | Abdeckung | Matrix Anforderung → umgesetzt durch (`satisfy`) → verifiziert durch (`verify`), Lücken rot markiert |
 | Rückverfolgung | Fokus-Element mit Spalten Anforderungen · Struktur · Schnittstellen · Verhalten · Nachweis; Klick verschiebt den Fokus, „Dein Weg“ führt zurück |
 | Auswirkung | Was ist bei einer Änderung betroffen – mit Reichweite, Begründung und Weg je Element |
-| Disziplinen | Was zu Mechanik, Elektronik, Software … gehört, welche Anforderungen jede Disziplin erfüllt, Schnittstellen über Disziplingrenzen und Software-auf-Hardware-Zuordnungen; Diagramme lassen sich nach Disziplin einfärben |
-| Vergleich | Unterschiede zu einer Baseline (gemerkter Stand, Ordner, Dateien oder – in VS Code – der letzte Git-Commit): neue, entfernte und geänderte Elemente, neu nachzuweisende Anforderungen, zu wiederholende Tests, Abdeckung und Modell-Check vorher/nachher; Markierung in den Diagrammen |
+| Disziplinen | Überblick, was zu Mechanik, Elektronik, Software … gehört, und Schnittstellen über Disziplingrenzen. **Fachsicht**: eine Disziplin oder *Test* wählen – dann zählt nur ihr Teil (Teile, Ports, erfüllte Anforderungen, Tests), alle Diagramme blenden Fremdes ab und heben die Teile an der Grenze gestrichelt hervor |
+| Vergleich | Unterschiede zu einer Baseline (gemerkter Stand, Ordner, Dateien oder – in VS Code – der letzte Git-Commit): neue, entfernte, geänderte und umbenannte Elemente (gleiche ID `<'A1'>` = gleiches Element), neu nachzuweisende Anforderungen, zu wiederholende Tests, Abdeckung und Modell-Check vorher/nachher; Markierung in den Diagrammen |
 
 **Lernhilfen**
 
 | Funktion | Was sie tut |
 |---|---|
-| Geführte Tour | Geht an einem Beispiel aus dem geladenen Modell den Entwicklungsweg entlang: Anforderung → Umsetzung → Schnittstelle → Verhalten → Test → Abdeckung → Auswirkung – mit Hervorhebung und dem passenden Quelltext |
+| Geführte Tour | 8–10 Schritte von der Anforderung zum Test. Liegt eine `tour.json` im Modellordner, erzählt sie deren Text; sonst erzeugt der Viewer die Tour aus dem Modell |
 | Fokus | Ein Element bleibt über Navigator, Diagramme, Detailansicht und Modellbaum hinweg ausgewählt; Diagramme wählen automatisch einen Kontext, in dem es vorkommt, und heben es hervor |
 | Steckbrief | Beschreibt das Fokus-Element in Klartext: was es ist, woraus es besteht, womit es verbunden ist, welche Anforderung es erfüllt, welcher Test es prüft, was eine Änderung betrifft – Lücken rot |
 | Modell-Check | Fehler (tote Verweise, unbekannte Typen, unpassende Port-Richtungen), Lücken (Anforderung ohne Umsetzung oder Test, Test ohne Anforderung) und Hinweise (offene Ports, Komponenten ohne Anforderung, unbenutzte Definitionen) – jeweils mit Begründung, Sprung und Code-Vorschlag |
-| Notation erklären | Beim Überfahren mit der Maus erklärt der Viewer Linien, Pfeilspitzen, Ports, eckige und runde Kästen, `^`, `:>>`, Stereotypen und Beziehungen – mit SysML-Beispiel; abschaltbar |
+| Notation erklären | Beim Überfahren mit der Maus erklärt der Viewer Linien, Pfeilspitzen, Ports, eckige und runde Kästen, `^`, `:>>`, Stereotypen und Beziehungen – mit SysML-Beispiel und, wenn eingetragen, dem Buchkapitel; abschaltbar |
 
 **Diagramme**: Übersicht nach Dateien gruppiert, Verbindungen (IBD mit Ports), Zustände, Aktionen, Anforderungen; Klick auf einen Part öffnet ein Detaildiagramm (Vererbung, Verwendung, erfüllte Anforderungen, innere Struktur). Namenskollisionen über Dateigrenzen werden gemeldet und lassen sich per Auswahl auflösen. Export als SVG oder PNG.
 
@@ -82,6 +82,35 @@ part def Akku { @Elektronik; }        // oder im Rumpf
 
 Verwendungen erben die Disziplin ihrer Definition, Definitionen die ihrer allgemeineren Definition. Hat ein Element mehrere, zählt die erste.
 
+## Eigene Tour
+
+Eine `tour.json` (oder `tour.de.json`, `tour.en.json` je Sprache) im Modellordner ersetzt die erzeugte Tour. Der Viewer liest sie mit ein, sie steht dann auch in der Dateiliste und lässt sich dort bearbeiten.
+
+```json
+{
+  "title": "Von der Anforderung zum Nachweis",
+  "steps": [
+    { "show": "reqs", "title": "Was fordert das System?", "text": "Fünf Anforderungen …" },
+    { "focus": "Anforderungen::roboterAnforderungen::laufzeit", "show": "trace", "code": true,
+      "title": "A1: zwei Stunden Laufzeit", "text": "…", "chapter": "Kap. 6" }
+  ]
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `title`, `text` | Überschrift und Erklärung des Schritts |
+| `focus` | Element im Fokus: qualifizierter Name (`Paket::Element`) oder einfacher Name |
+| `show` | `start`, `reqs`, `struct`, `ibd`, `states`, `actions`, `diagram` (passendes Diagramm zum Fokus), `cover`, `gaps`, `trace`, `impact`, `check`, `disc`, `diff` |
+| `code` | `true` = Quelltextzeile des Elements, oder ein eigener Code-Schnipsel |
+| `chapter` | Verweis ins Buch, wird unter dem Text angezeigt |
+
+Das Beispielprojekt enthält einen Entwurf mit neun Schritten. Der Test prüft, dass jedes `focus`-Element im Modell existiert und die Tour 8–10 Schritte hat.
+
+## Buchkapitel zu den Notationserklärungen
+
+`src/book.json` ordnet jeder Notation ein Kapitel zu, z. B. `"e-iface": "Kap. 9.2 Schnittstellen"`. Leere Einträge zeigt der Viewer nicht an. Die Schlüssel sind vorbelegt: `e-…` Linien im Diagramm, `c-…` Abteilungen im Kasten, `r-…` Beziehungen im Steckbrief, dazu die Elementarten (`part def`, `port` …). Nach dem Eintragen `npm run build`.
+
 ## Beispielprojekt
 
 Ein vollständiges Beispiel mit zwei absichtlichen Lücken liegt in `beispiel/indoorroboter/`, inhaltsgleich auf Englisch in `beispiel/indoor-robot/`. Der Viewer zeigt das Beispiel in der eingestellten Sprache; ein Sprachwechsel tauscht es aus, solange du es nicht bearbeitet hast.
@@ -120,10 +149,11 @@ src/                 Quellen des Viewers
   page.html          Seitengerüst und Styles
   diag.css           Styles der Diagramme (auch für SVG-Export)
   lang/              Oberflächentexte je Sprache: de.json (Basis), en.json, …
+  book.json          Buchkapitel zu den Notationserklärungen
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
-beispiel/            Beispielprojekt Indoorroboter, je 6 Dateien: indoorroboter/ (de), indoor-robot/ (en)
+beispiel/            Beispielprojekt Indoorroboter, je 6 Modelldateien und tour.json: indoorroboter/ (de), indoor-robot/ (en)
 tests/               Parser-, Traceability-, Steckbrief-, Check- und Sprachtests; Test der Erweiterung gegen ein VS-Code-Mock
   fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
 ```

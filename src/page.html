@@ -388,6 +388,18 @@ body.nosrc .pane.src { display: none; }
 @keyframes tourpulse { 50% { outline-offset: 7px; } }
 @media (prefers-reduced-motion: reduce) { .tour-hl { animation: none; } }
 @media (max-width: 860px) { .tour { left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 52vh; overflow: auto; } }
+
+/* Fachsicht */
+.fchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.fchip { display: inline-flex; align-items: center; border: 1px solid var(--line); background: var(--raise); border-radius: 99px; padding: 3px 11px; font-size: 12.5px; cursor: pointer; }
+.fchip.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.ddot.s-test { background: var(--n-test); border: 1px solid var(--edge); }
+.dcol.bound { border-style: dashed; border-color: var(--chg); } .dcol.warn header b { color: var(--warn); }
+.fachbadge { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent); border-radius: 99px; padding: 2px 4px 2px 10px; font-size: 12px; white-space: nowrap; }
+.fachbadge button { border: 0; background: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 5px; color: var(--muted); }
+.dg .fdim { opacity: .18; } .dg .fbound > .nb { stroke: var(--chg); stroke-width: 2.6; stroke-dasharray: 6 3; }
+.tip .tref { color: var(--accent-soft); }
+.tref { display: block; margin-top: 4px; font-size: 11.5px; color: var(--accent); font-style: normal; }
 </style>
 
 <header class="top">
@@ -444,6 +456,7 @@ body.nosrc .pane.src { display: none; }
         <button type="button" role="tab" id="mDiag" aria-selected="false" data-i18n="mode.diag">Diagramme</button>
       </div>
       <span class="modehint" data-i18n="ui.modehint">Navigator: Anforderung → Umsetzung → Schnittstellen → Test. Diagramme: grafische Sichten.</span>
+      <span class="fachbadge" id="fachBadge" hidden></span>
       <label class="tiptog" title="Beim Überfahren mit der Maus erklärt der Viewer Linien, Formen und Begriffe" data-i18n-title="ui.tips.title"><input type="checkbox" id="tipsOn"> <span data-i18n="ui.tips.label">Notation erklären</span></label>
     </div>
     <div class="focusbar" id="focusBar"></div>
