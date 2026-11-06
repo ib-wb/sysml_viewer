@@ -40,4 +40,15 @@ assert.ok(checks.every(c => !/[äöüß]|Anforderung/.test(c.rule && C.RULES[c.r
 assert.strictEqual(C.RULES.unver.title, 'Requirement without a test');
 C.setLang('de');
 assert.strictEqual(C.RULES.unver.title, 'Anforderung ohne Test');
+
+// Beide Beispielprojekte müssen dasselbe zeigen: gleiche Größe, gleiche Abdeckung, gleiche Lücken
+function load(d) {
+  const base = path.resolve(__dirname, '../beispiel', d), out = [];
+  (function walk(x) { for (const f of fs.readdirSync(x)) { const p = path.join(x, f); if (fs.statSync(p).isDirectory()) walk(p); else if (/\.sysml$/.test(f)) out.push({ name: path.relative(base, p), text: fs.readFileSync(p, 'utf8') }); } })(base);
+  const r = C.parseFiles(out); const I = C.buildIndex(r.root, {}); const T = C.buildTrace();
+  return { warns: r.warns, n: I.all.length, rels: T.edges.length, cov: C.coverage().map(x => x.status).join(','), checks: C.modelChecks(r.warns).map(c => c.rule).sort().join(','), ambig: I.ambig.length };
+}
+const sde = load('indoorroboter'), sen = load('indoor-robot');
+assert.deepStrictEqual(sen.warns, [], 'Parser-Hinweise im englischen Beispiel');
+for (const k of ['n', 'rels', 'cov', 'checks', 'ambig']) assert.strictEqual(sen[k], sde[k], `Beispiele unterscheiden sich in ${k}: de=${sde[k]} en=${sen[k]}`);
 console.log(`i18n.test.js: ${Object.keys(dicts).join(', ')} vollständig, Englisch geprüft`);

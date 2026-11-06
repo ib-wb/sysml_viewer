@@ -60,7 +60,7 @@ Der Navigator folgt nur Beziehungen, die modelliert sind:
 | Ableitung | `#derivation connection { end #original ::> a; end #derive ::> b; }` |
 | Allokation | `allocate NavigiereZumZiel to roboter.rechner;` |
 
-Ein vollständiges Beispiel mit zwei absichtlichen Lücken liegt in `beispiel/indoorroboter/`.
+Ein vollständiges Beispiel mit zwei absichtlichen Lücken liegt in `beispiel/indoorroboter/`, inhaltsgleich auf Englisch in `beispiel/indoor-robot/`. Der Viewer zeigt das Beispiel in der eingestellten Sprache; ein Sprachwechsel tauscht es aus, solange du es nicht bearbeitet hast.
 
 ## Grenzen
 
@@ -80,7 +80,9 @@ Nicht übersetzt werden SysML-Schlüsselwörter (`part def`, `satisfy`, `verify`
 4. `npm test` – der Sprachtest meldet fehlende oder überzählige Schlüssel und abweichende Platzhalter.
 5. `npm run build` – die Datei landet automatisch im Viewer und im Sprachmenü.
 
-Fehlt ein Schlüssel in einer Sprache, zeigt der Viewer den deutschen Text. Für die Befehle und Einstellungen der VS-Code-Erweiterung zusätzlich `vscode-extension/package.nls.fr.json` anlegen (Vorlage: `package.nls.de.json`).
+Fehlt ein Schlüssel in einer Sprache, zeigt der Viewer den deutschen Text.
+
+Ein eigenes Beispielprojekt für die neue Sprache ist optional: Ordner unter `beispiel/` anlegen und in `tools/build.py` bei `SAMPLES` eintragen. Ohne Eintrag zeigt der Viewer das englische Beispiel. Der Sprachtest prüft, dass alle Beispiele dieselbe Abdeckung und dieselben Lücken haben. Für die Befehle und Einstellungen der VS-Code-Erweiterung zusätzlich `vscode-extension/package.nls.fr.json` anlegen (Vorlage: `package.nls.de.json`).
 
 ## Aufbau des Repositorys
 
@@ -96,7 +98,7 @@ src/                 Quellen des Viewers
 tools/build.py       baut dist/ und die Webview der Erweiterung
 dist/                fertige Browser-Version
 vscode-extension/    VS-Code-Erweiterung (extension.js, package.json, media/)
-beispiel/            Beispielprojekt Indoorroboter (5 Dateien)
+beispiel/            Beispielprojekt Indoorroboter, je 5 Dateien: indoorroboter/ (de), indoor-robot/ (en)
 tests/               Parser-, Traceability-, Steckbrief-, Check- und Sprachtests; Test der Erweiterung gegen ein VS-Code-Mock
   fixtures/          absichtlich fehlerhaftes Modell für den Modell-Check
 ```

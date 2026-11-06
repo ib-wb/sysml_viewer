@@ -1,5 +1,5 @@
 /* ================= App ================= */
-const SAMPLE_FILES = /*SAMPLE*/;
+const SAMPLES = /*SAMPLE*/; // Beispielprojekt je Sprache
 const DIAG_CSS = /*DIAGCSS_STR*/;
 const TOKENS = ['--ink','--muted','--edge','--canvas','--n-bg','--n-part','--n-item','--n-port','--n-attr','--n-req','--n-state','--n-action','--n-usage','--port','--flow','--accent','--warn'];
 const $ = s => document.getElementById(s);
@@ -32,11 +32,15 @@ function changeLang(code, noStore) {
   setLang(code); if (!noStore) store.set('lang', LANG);
   applyStatic();
   if (!$('info').dataset.custom) $('info').textContent = L('ui.info.diag');
+  if (S.project === SAMPLE && isPristineSample(S.files) && S.files[0].text !== sampleFiles()[0].text) { setFiles(sampleFiles(), SAMPLE); return; }
   if (S.files.length) reparse(); else renderFocusBar();
   if (!$('detail').hidden) refreshDetail();
 }
 $('langSel').onchange = e => changeLang(e.target.value);
 const SAMPLE = '__sample__'; // Projektname des Beispiels wird beim Anzeigen übersetzt
+const sampleFiles = (code = LANG) => JSON.parse(JSON.stringify(SAMPLES[code] || SAMPLES.en || SAMPLES.de));
+// Unverändertes Beispiel in irgendeiner Sprache? Nur dann darf der Sprachwechsel es austauschen.
+const isPristineSample = files => Object.values(SAMPLES).some(sm => sm.length === files.length && sm.every(f => files.some(g => g.name === f.name && g.text === f.text)));
 const projName = () => S.project === SAMPLE ? L('ui.sampleName') : S.project;
 
 // In VS Code läuft der Viewer als Webview: Dateien kommen von der Erweiterung, Zustand über die State-API
@@ -483,7 +487,7 @@ $('reloadBtn').onclick = async () => {
     const i = files.findIndex(f => f.name === act); if (i > 0) showFile(i); toast(L('ui.reloaded'));
   } catch (e) { toast(L('ui.reloadFailed', { msg: e.message })); }
 };
-$('sampleBtn').onclick = () => { setFiles(JSON.parse(JSON.stringify(SAMPLE_FILES)), SAMPLE); toast(Ln('ui.sampleLoaded', SAMPLE_FILES.length)); };
+$('sampleBtn').onclick = () => { const f = sampleFiles(); setFiles(f, SAMPLE); toast(Ln('ui.sampleLoaded', f.length)); };
 
 // Drag & Drop: Dateien und ganze Ordner
 async function entryFiles(entry, prefix, out) {
@@ -583,7 +587,8 @@ function initVSCode() {
   let files = null, project = null;
   try { files = JSON.parse(store.get('files') || 'null'); project = store.get('project'); } catch (e) {}
   if (!files || !files.length) { const old = store.get('src'); if (old && old.trim()) { files = [{ name: store.get('fname') || 'Entwurf.sysml', text: old }]; project = files[0].name; } }
-  if (!files || !files.length) { files = JSON.parse(JSON.stringify(SAMPLE_FILES)); project = SAMPLE; }
+  if (project === SAMPLE && files && files.length && isPristineSample(files)) files = null; // unverändertes Beispiel: in aktueller Sprache neu laden
+  if (!files || !files.length) { files = sampleFiles(); project = SAMPLE; }
   S.files = files; S.project = project || SAMPLE;
   try { await Promise.race([Promise.all(['12.5px "IBM Plex Sans"', '600 12.5px "IBM Plex Sans"', 'italic 10.5px "IBM Plex Sans"', '11px "IBM Plex Mono"'].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
   if (store.get('nosrc') === '1') setSrc(false);

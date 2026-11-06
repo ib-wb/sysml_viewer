@@ -10,13 +10,15 @@ import json, os, shutil, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
-SAMPLE_DIR = os.path.join(ROOT, 'beispiel', 'indoorroboter')
+# Beispielprojekt je Sprache: Sprachcode → Ordner unter beispiel/. Fehlt eine Sprache, nimmt der Viewer Englisch, dann Deutsch.
+SAMPLES = {'de': 'indoorroboter', 'en': 'indoor-robot'}
 
 def read(*p):
     with open(os.path.join(*p), encoding='utf-8') as f:
         return f.read()
 
-def sample_files():
+def sample_files(d):
+    SAMPLE_DIR = os.path.join(ROOT, 'beispiel', d)
     files = []
     for dp, _, fs in os.walk(SAMPLE_DIR):
         for f in fs:
@@ -36,7 +38,7 @@ def page():
     app = app.replace('/*I18N*/', json.dumps(langs, ensure_ascii=False))
     p = read(SRC, 'page.html')
     p = p.replace('/*DIAGCSS*/', css).replace('/*APP*/', app).replace('/*CORE*/', read(SRC, 'core.js'))
-    p = p.replace('/*SAMPLE*/', json.dumps(sample_files(), ensure_ascii=False)).replace('/*DIAGCSS_STR*/', json.dumps(css.replace('\n', '')))
+    p = p.replace('/*SAMPLE*/', json.dumps({k: sample_files(d) for k, d in SAMPLES.items()}, ensure_ascii=False)).replace('/*DIAGCSS_STR*/', json.dumps(css.replace('\n', '')))
     return p
 
 HEAD = '<!doctype html><html lang="de"><head><meta charset="utf-8">{csp}<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{{color-scheme:light}}body{{margin:0;font-size:14px}}[hidden]{{display:none!important}}</style></head><body>'
