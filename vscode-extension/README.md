@@ -1,5 +1,7 @@
 # SysML v2 Viewer
 
+**Deutsch** · [English](README.en.md)
+
 Navigator und Diagramme für SysML-v2-Textmodelle direkt in VS Code. Der Viewer liest alle `.sysml`- und `.kerml`-Dateien des geöffneten Ordners und aktualisiert sich beim Tippen.
 
 ## Was er zeigt

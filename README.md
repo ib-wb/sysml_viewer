@@ -1,5 +1,7 @@
 # SysML v2 Viewer
 
+**Deutsch** · [English](README.en.md)
+
 Navigator und Diagramme für **SysML-v2-Textmodelle** – im Browser und als VS-Code-Erweiterung. Der Viewer liest ein ganzes Projekt aus mehreren `.sysml`/`.kerml`-Dateien und beantwortet die Fragen, die bei der Arbeit am Modell ständig auftauchen:
 
 - Welche Anforderung wird von welcher Komponente umgesetzt – und von welchem Test geprüft?
