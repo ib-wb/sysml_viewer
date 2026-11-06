@@ -118,4 +118,4 @@ Runtime dependency: [elkjs](https://github.com/kieler/elkjs) 0.9.3 (EPL-2.0) for
 
 ## License
 
-See [LICENSE.md](LICENSE.md) (in German: all rights reserved).
+See [LICENSE.md](LICENSE.md) (German). In short: use for teaching, training and your own projects is permitted, as is passing the unmodified .vsix file on to pupils and students; all other rights reserved. Third-party components: elkjs (EPL-2.0), IBM Plex fonts (OFL 1.1).
