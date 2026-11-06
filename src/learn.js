@@ -167,7 +167,7 @@ function tipFor(t) {
   if (!t.closest('.dg')) return null;
   if (t.closest('.ambm')) return NOTE.amb;
   const port = t.closest('g.port');
-  if (port) { const el = elByEid(port.dataset.eid); if (!el) return NOTE['port-generic']; const dir = portDir(el); return ['Port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : ''), (dir ? L('tip.portDir', { d: DIR_PLAIN[dir] }) : L('tip.portDirOpen')) + ' ' + (el.types[0] && el.types[0].startsWith('~') ? L('tip.portConj') + ' ' : '') + L('tip.portTriangle'), 'port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : '') + ';']; }
+  if (port) { const el = elByEid(port.dataset.eid); if (!el) return NOTE['port-generic']; const dir = portDir(el); return ['Port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : ''), (dir ? L('tip.portDir', { d: DIR_PLAIN[dir] }) : L('tip.portDirOpen')) + ' ' + (el.types[0] && el.types[0].startsWith('~') ? L('tip.portConj') + ' ' : '') + L('tip.portTriangle'), 'port ' + el.name + (el.types[0] ? ' : ' + el.types[0] : '') + ';', bookRef('port-generic')]; }
   const cls = (t.getAttribute && t.getAttribute('class')) || '';
   let m = cls.match(/\be-(\w+)/) || cls.match(/\bel-(\w+)/); if (m && NOTE['e-' + m[1]]) return NOTE['e-' + m[1]];
   if (/\bst\b/.test(cls)) { const kw = t.textContent.replace(/[«»]/g, '').trim(); return kindTip(kw) || (kw === L('struct.fileStereo') ? NOTE.file : null); }

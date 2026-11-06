@@ -109,7 +109,7 @@ The sample project contains a nine-step draft. The test checks that every `focus
 
 ## Book chapters for the notation explanations
 
-`src/book.json` maps each notation to a chapter, e.g. `"e-iface": "Ch. 9.2 Interfaces"`. Empty entries are not shown. The keys are prefilled: `e-…` lines in diagrams, `c-…` compartments in boxes, `r-…` relationships in the profile, plus element kinds (`part def`, `port` …). Run `npm run build` afterwards.
+`src/book.json` maps each notation, the navigator tabs and the steps of the generated tour to a section of the (German) book, edition 16.1, e.g. `"e-iface": "Kap. 10.8 Schnittstellen in SysML"`. Empty entries are not shown. The keys are prefilled: `e-…` lines in diagrams, `c-…` compartments in boxes, `r-…` relationships in the profile, plus element kinds (`part def`, `port` …). Run `npm run build` afterwards.
 
 ## Sample project
 

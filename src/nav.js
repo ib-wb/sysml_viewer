@@ -53,7 +53,7 @@ function renderNav() {
   if (S.mode !== 'nav') return;
   const t = $('ntabs'); t.innerHTML = '';
   for (const k of NTABS) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'vtab'; b.setAttribute('role', 'tab'); b.title = L('nav.tab.' + k + '.hint');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'vtab'; b.setAttribute('role', 'tab'); b.title = L('nav.tab.' + k + '.hint') + (bookRef('tab-' + k) ? ' · ' + L('tip.book', { ref: bookRef('tab-' + k) }) : '');
     b.setAttribute('aria-selected', String(NAV.tab === k)); b.textContent = L('nav.tab.' + k);
     if (k === 'diff' && S.base) { const D = getDiff(); const n = D ? D.d.added.length + D.d.removed.length + D.d.changed.length : 0; if (n) { const sp = document.createElement('span'); sp.className = 'n chg'; sp.textContent = n; b.appendChild(sp); } }
     if (k === 'check') { const n = currentChecks().filter(i => i.sev !== 'hint').length; if (n) { const sp = document.createElement('span'); sp.className = 'n bad'; sp.textContent = n; b.appendChild(sp); } }

@@ -2,7 +2,7 @@
   "name": "sysml-v2-viewer",
   "displayName": "SysML v2 Viewer",
   "description": "%desc%",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "ib-wb",
   "author": {
     "name": "Wolfgang Becker"

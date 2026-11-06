@@ -304,6 +304,7 @@ function buildTour() {
   if (P.impl) st.push({ k: 'impact', p: { impl: nmOf(P.impl) }, run: () => navGo(P.impl, 'impact'), target: '#nbody' });
   st.push({ k: 'check', p: {}, run: nav('check'), target: '#ntabs' });
   st.push({ k: 'end', p: {}, run: nav('start'), target: '#nbody' });
+  for (const x of st) x.chapter = bookRef('tour-' + (x.k2 || x.k));
   return st;
 }
 function tourPanel() {

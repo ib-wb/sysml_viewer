@@ -109,7 +109,7 @@ Das Beispielprojekt enthält einen Entwurf mit neun Schritten. Der Test prüft, 
 
 ## Buchkapitel zu den Notationserklärungen
 
-`src/book.json` ordnet jeder Notation ein Kapitel zu, z. B. `"e-iface": "Kap. 9.2 Schnittstellen"`. Leere Einträge zeigt der Viewer nicht an. Die Schlüssel sind vorbelegt: `e-…` Linien im Diagramm, `c-…` Abteilungen im Kasten, `r-…` Beziehungen im Steckbrief, dazu die Elementarten (`part def`, `port` …). Nach dem Eintragen `npm run build`.
+`src/book.json` ordnet jeder Notation, den Navigator-Reitern und den Schritten der erzeugten Tour einen Abschnitt des Buchs zu (Stand: Fassung 16.1), z. B. `"e-iface": "Kap. 10.8 Schnittstellen in SysML"`. Leere Einträge zeigt der Viewer nicht an. Die Schlüssel sind vorbelegt: `e-…` Linien im Diagramm, `c-…` Abteilungen im Kasten, `r-…` Beziehungen im Steckbrief, dazu die Elementarten (`part def`, `port` …). Nach dem Eintragen `npm run build`.
 
 ## Beispielprojekt
 
